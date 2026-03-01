@@ -35,13 +35,42 @@ public class PlayerController : MonoBehaviour
     private Vector3 velocidadVertical;
     private float pitchActual = 0f;
 
+    // Referencias guardadas para desuscribirse correctamente
+    private System.Action<InputAction.CallbackContext> onMovimientoPerformed;
+    private System.Action<InputAction.CallbackContext> onMovimientoCanceled;
+    private System.Action<InputAction.CallbackContext> onSaltoPerformed;
+    private System.Action<InputAction.CallbackContext> onCorrerPerformed;
+    private System.Action<InputAction.CallbackContext> onCorrerCanceled;
+    private System.Action<InputAction.CallbackContext> onCamaraPerformed;
+    private System.Action<InputAction.CallbackContext> onCamaraCanceled;
+    private System.Action<InputAction.CallbackContext> onInteractuarPerformed;
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
         playerInput = GetComponent<PlayerInput>();
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // Asigna la cámara automáticamente desde los hijos del prefab
+        if (camTransform == null)
+        {
+            Camera camHija = GetComponentInChildren<Camera>();
+            if (camHija != null)
+                camTransform = camHija.transform;
+            else
+                Debug.LogWarning($"[PlayerController] Jugador {playerInput.playerIndex}: no se encontró cámara hija.");
+        }
+
+        // Solo el jugador 0 mantiene el AudioListener activo para evitar conflictos
+        AudioListener audioListener = GetComponentInChildren<AudioListener>();
+        if (audioListener != null)
+            audioListener.enabled = (playerInput.playerIndex == 0);
+
+        // Lockear cursor solo en PC
+        if (playerInput.playerIndex == 0)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
 
         accionMovimiento = playerInput.actions["Movimiento"];
         accionSalto = playerInput.actions["Salto"];
@@ -52,18 +81,24 @@ public class PlayerController : MonoBehaviour
 
     private void OnEnable()
     {
-        accionMovimiento.performed += ctx => inputMovimiento = ctx.ReadValue<Vector2>();
-        accionMovimiento.canceled += ctx => inputMovimiento = Vector2.zero;
+        // Se crean y guardan las lambdas para poder desuscribirse después
+        onMovimientoPerformed = ctx => inputMovimiento = ctx.ReadValue<Vector2>();
+        onMovimientoCanceled = ctx => inputMovimiento = Vector2.zero;
+        onSaltoPerformed = ctx => Saltar();
+        onCorrerPerformed = ctx => corriendo = ctx.ReadValue<float>() > 0.5f;
+        onCorrerCanceled = ctx => corriendo = false;
+        onCamaraPerformed = ctx => inputCamara = ctx.ReadValue<Vector2>();
+        onCamaraCanceled = ctx => inputCamara = Vector2.zero;
+        onInteractuarPerformed = ctx => Interactuar();
 
-        accionSalto.performed += ctx => Saltar();
-
-        accionCorrer.performed += ctx => corriendo = ctx.ReadValue<float>() > 0.5f;
-        accionCorrer.canceled += ctx => corriendo = false;
-
-        accionCamara.performed += ctx => inputCamara = ctx.ReadValue<Vector2>();
-        accionCamara.canceled += ctx => inputCamara = Vector2.zero;
-
-        accionInteractuar.performed += ctx => Interactuar();
+        accionMovimiento.performed += onMovimientoPerformed;
+        accionMovimiento.canceled += onMovimientoCanceled;
+        accionSalto.performed += onSaltoPerformed;
+        accionCorrer.performed += onCorrerPerformed;
+        accionCorrer.canceled += onCorrerCanceled;
+        accionCamara.performed += onCamaraPerformed;
+        accionCamara.canceled += onCamaraCanceled;
+        accionInteractuar.performed += onInteractuarPerformed;
 
         accionMovimiento.Enable();
         accionSalto.Enable();
@@ -74,19 +109,24 @@ public class PlayerController : MonoBehaviour
 
     private void OnDisable()
     {
-        accionMovimiento.performed -= ctx => inputMovimiento = ctx.ReadValue<Vector2>();
-        accionMovimiento.canceled -= ctx => inputMovimiento = Vector2.zero;
-        accionSalto.performed -= ctx => Saltar();
-        accionCorrer.performed -= ctx => corriendo = ctx.ReadValue<float>() > 0.5f;
-        accionCorrer.canceled -= ctx => corriendo = false;
-        accionCamara.performed -= ctx => inputCamara = ctx.ReadValue<Vector2>();
-        accionCamara.canceled -= ctx => inputCamara = Vector2.zero;
-        accionInteractuar.performed -= ctx => Interactuar();
+        accionMovimiento.performed -= onMovimientoPerformed;
+        accionMovimiento.canceled -= onMovimientoCanceled;
+        accionSalto.performed -= onSaltoPerformed;
+        accionCorrer.performed -= onCorrerPerformed;
+        accionCorrer.canceled -= onCorrerCanceled;
+        accionCamara.performed -= onCamaraPerformed;
+        accionCamara.canceled -= onCamaraCanceled;
+        accionInteractuar.performed -= onInteractuarPerformed;
+
+        accionMovimiento.Disable();
+        accionSalto.Disable();
+        accionCorrer.Disable();
+        accionCamara.Disable();
+        accionInteractuar.Disable();
     }
 
     private void Update()
     {
-
         ManejarMovimiento();
         ManejarCamara();
         AplicarGravedad();
@@ -144,7 +184,8 @@ public class PlayerController : MonoBehaviour
             IInteractuable interactuable = hit.collider.GetComponent<IInteractuable>();
             interactuable?.Interactuar();
         }
-        Debug.Log("Interactuar presionado");
+
+        Debug.Log($"[PlayerController] Jugador {playerInput.playerIndex} interactuó.");
     }
 }
 
