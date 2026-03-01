@@ -208,6 +208,22 @@ public partial class @Player: IInputActionCollection2, IDisposable
                     ""isOR"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Teclado"",
+            ""bindingGroup"": ""Teclado"",
+            ""devices"": [
+                {
+                    ""devicePath"": ""<Keyboard>"",
+                    ""isOptional"": false,
+                    ""isOR"": false
+                },
+                {
+                    ""devicePath"": ""<Mouse>"",
+                    ""isOptional"": false,
+                    ""isOR"": false
+                }
+            ]
         }
     ]
 }");
@@ -445,6 +461,19 @@ public partial class @Player: IInputActionCollection2, IDisposable
         {
             if (m_MandoSchemeIndex == -1) m_MandoSchemeIndex = asset.FindControlSchemeIndex("Mando");
             return asset.controlSchemes[m_MandoSchemeIndex];
+        }
+    }
+    private int m_TecladoSchemeIndex = -1;
+    /// <summary>
+    /// Provides access to the input control scheme.
+    /// </summary>
+    /// <seealso cref="UnityEngine.InputSystem.InputControlScheme" />
+    public InputControlScheme TecladoScheme
+    {
+        get
+        {
+            if (m_TecladoSchemeIndex == -1) m_TecladoSchemeIndex = asset.FindControlSchemeIndex("Teclado");
+            return asset.controlSchemes[m_TecladoSchemeIndex];
         }
     }
     /// <summary>
