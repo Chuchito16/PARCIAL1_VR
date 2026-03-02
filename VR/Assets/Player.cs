@@ -151,12 +151,78 @@ public partial class @Player: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 },
                 {
+                    ""name"": ""WASD"",
+                    ""id"": ""7df547f4-4051-4e38-94f4-acbfef3c4bf0"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movimiento"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""de192f83-67cf-4590-94d2-dc8c7a73fc8a"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movimiento"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""009a7097-7cca-45df-acfd-c809e89fd7af"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movimiento"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""cb4abc16-b800-4be3-a0ef-645e1de7d218"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movimiento"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""c13f4562-2fd3-486f-9198-8c3c2c26b359"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movimiento"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
                     ""name"": """",
                     ""id"": ""e9e9cf94-8e1e-4867-b296-9c266c30aee7"",
                     ""path"": ""<Gamepad>/buttonSouth"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Mando"",
+                    ""action"": ""Salto"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""487f94ba-67fd-4042-a628-200b9314c8bb"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
                     ""action"": ""Salto"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -174,6 +240,17 @@ public partial class @Player: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""46759dfe-f8e8-4afd-8b10-eb7879aa51b8"",
+                    ""path"": ""<Keyboard>/ctrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Correr"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""13e8eb70-ef57-4b66-b157-a878be64edc0"",
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
@@ -185,11 +262,33 @@ public partial class @Player: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""ff8100a9-0d5c-4ad2-8a69-28bcf2f1abca"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";mouse"",
+                    ""action"": ""Camara"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""d0a0d999-0a39-4d7b-b2c1-8e816099d657"",
                     ""path"": ""<Gamepad>/rightShoulder"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Mando"",
+                    ""action"": ""Interactuar"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4e81f6ea-1c46-4148-b747-28e40c737f5e"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
                     ""action"": ""Interactuar"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -218,6 +317,17 @@ public partial class @Player: IInputActionCollection2, IDisposable
                     ""isOptional"": false,
                     ""isOR"": false
                 },
+                {
+                    ""devicePath"": ""<Mouse>"",
+                    ""isOptional"": false,
+                    ""isOR"": false
+                }
+            ]
+        },
+        {
+            ""name"": ""mouse"",
+            ""bindingGroup"": ""mouse"",
+            ""devices"": [
                 {
                     ""devicePath"": ""<Mouse>"",
                     ""isOptional"": false,
@@ -474,6 +584,19 @@ public partial class @Player: IInputActionCollection2, IDisposable
         {
             if (m_TecladoSchemeIndex == -1) m_TecladoSchemeIndex = asset.FindControlSchemeIndex("Teclado");
             return asset.controlSchemes[m_TecladoSchemeIndex];
+        }
+    }
+    private int m_mouseSchemeIndex = -1;
+    /// <summary>
+    /// Provides access to the input control scheme.
+    /// </summary>
+    /// <seealso cref="UnityEngine.InputSystem.InputControlScheme" />
+    public InputControlScheme mouseScheme
+    {
+        get
+        {
+            if (m_mouseSchemeIndex == -1) m_mouseSchemeIndex = asset.FindControlSchemeIndex("mouse");
+            return asset.controlSchemes[m_mouseSchemeIndex];
         }
     }
     /// <summary>

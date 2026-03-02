@@ -148,7 +148,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 6436912781418036136}
         m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
-        m_MethodName: OnCorrer
+        m_MethodName: OnMove
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -225,7 +225,7 @@ MonoBehaviour:
     m_ActionId: af2bb1a4-91e6-45da-9c7a-19546567a3de
     m_ActionName: 'New action map/Interactuar[/XInputControllerWindows/rightShoulder]'
   m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: Mando
+  m_DefaultControlScheme: 
   m_DefaultActionMap: Character
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 8041260513201267033}
