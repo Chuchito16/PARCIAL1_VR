@@ -6,96 +6,123 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movimiento")]
     public float velocidadCaminar = 5f;
-    public float velocidadCorrer  = 10f;
-    public float fuerzaSalto      = 5f;
-    public float gravedad         = -9.81f;
+    public float velocidadCorrer = 10f;
+    public float fuerzaSalto = 5f;
+    public float gravedad = -9.81f;
 
     [Header("Cámara")]
     public Transform camTransform;
     public float sensibilidad = 2f;
-    public float pitchMin     = -80f;
-    public float pitchMax     =  80f;
+    public float pitchMin = -80f;
+    public float pitchMax = 80f;
 
-    [Header("Input Actions")]
-    public InputActionReference moveAction;
-    public InputActionReference runAction;
-    public InputActionReference jumpAction;
-    public InputActionReference lookAction;
-    public InputActionReference interactAction;
-
-    // Se asigna automáticamente, no hace falta arrastrar en el Inspector
+    // ── Internos ─────────────────────────────────────────────────────────────
     private CharacterController controller;
-
     private Vector3 playerVelocity;
-    private bool    grounded;
-    private float   pitch;
+    private bool grounded;
+    private float pitch;
 
+    // Valores leídos desde los eventos
+    private Vector2 moveInput;
+    private Vector2 lookInput;
+    private bool corriendo;
+
+    // ── Awake ─────────────────────────────────────────────────────────────────
     private void Awake()
     {
-        // Auto-asigna el CharacterController y la cámara
         controller = GetComponent<CharacterController>();
-
-        if (camTransform == null)
-            camTransform = GetComponentInChildren<Camera>()?.transform;
     }
 
-    private void OnEnable()
-    {
-        // Verifica que cada acción esté asignada antes de habilitarla
-        moveAction?.action.Enable();
-        runAction?.action.Enable();
-        jumpAction?.action.Enable();
-        lookAction?.action.Enable();
-        interactAction?.action.Enable();
-    }
-
-    private void OnDisable()
-    {
-        moveAction?.action.Disable();
-        runAction?.action.Disable();
-        jumpAction?.action.Disable();
-        lookAction?.action.Disable();
-        interactAction?.action.Disable();
-    }
-
-    void Update()
+    // ── Update ────────────────────────────────────────────────────────────────
+    private void Update()
     {
         grounded = controller.isGrounded;
+
         if (grounded && playerVelocity.y < -2f)
             playerVelocity.y = -2f;
 
-        // --- Movimiento ---
-        Vector2 input     = moveAction.action.ReadValue<Vector2>();
-        bool    corriendo = runAction.action.IsPressed();
-        float   velocidad = corriendo ? velocidadCorrer : velocidadCaminar;
-        Vector3 move      = transform.right * input.x + transform.forward * input.y;
-        controller.Move(move * velocidad * Time.deltaTime);
+        HandleMovimiento();
+        HandleCamara();
 
-        // --- Cámara ---
+        playerVelocity.y += gravedad * Time.deltaTime;
+    }
+
+    // ── Lógica de movimiento ──────────────────────────────────────────────────
+    private void HandleMovimiento()
+    {
+        float speed = corriendo ? velocidadCorrer : velocidadCaminar;
+
+        Vector3 forward = camTransform != null ? camTransform.forward : transform.forward;
+        Vector3 right = camTransform != null ? camTransform.right : transform.right;
+        forward.y = 0f;
+        right.y = 0f;
+        forward.Normalize();
+        right.Normalize();
+
+        Vector3 moveDir = (forward * moveInput.y + right * moveInput.x);
+        moveDir = Vector3.ClampMagnitude(moveDir, 1f);
+
+        Vector3 finalMove = moveDir * speed + Vector3.up * playerVelocity.y;
+        controller.Move(finalMove * Time.deltaTime);
+    }
+
+    // ── Lógica de cámara ──────────────────────────────────────────────────────
+    private void HandleCamara()
+    {
+        transform.Rotate(Vector3.up * lookInput.x * sensibilidad);
+
+        pitch -= lookInput.y * sensibilidad;
+        pitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
+
         if (camTransform != null)
         {
-            Vector2 look = lookAction.action.ReadValue<Vector2>();
-            transform.Rotate(Vector3.up * look.x * sensibilidad);
-            pitch = Mathf.Clamp(pitch - look.y * sensibilidad, pitchMin, pitchMax);
-            camTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+            Vector3 angles = camTransform.localEulerAngles;
+            angles.x = pitch;
+            camTransform.localEulerAngles = angles;
         }
-
-        // --- Salto ---
-        if (grounded && jumpAction.action.WasPressedThisFrame())
-            playerVelocity.y = Mathf.Sqrt(fuerzaSalto * -2f * gravedad);
-
-        // --- Gravedad ---
-        playerVelocity.y += gravedad * Time.deltaTime;
-        controller.Move(Vector3.up * playerVelocity.y * Time.deltaTime);
-
-        // --- Interacción ---
-        if (interactAction.action.WasPressedThisFrame() && camTransform != null)
-            if (Physics.Raycast(camTransform.position, camTransform.forward, out RaycastHit hit, 3f))
-                hit.collider.GetComponent<IInteractuable>()?.Interactuar();
     }
-}
 
-public interface IInteractuable
-{
-    void Interactuar();
+    // ═════════════════════════════════════════════════════════════════════════
+    //  EVENTOS  —  estos aparecen en el Inspector bajo ► Character
+    // ═════════════════════════════════════════════════════════════════════════
+
+    // Arrastra este método al evento "Movimiento" en el Inspector
+    public void OnMove(InputAction.CallbackContext context)
+    {
+        moveInput = context.ReadValue<Vector2>();
+    }
+
+    // Arrastra este método al evento "Camara" en el Inspector
+    public void OnCamara(InputAction.CallbackContext context)
+    {
+        lookInput = context.ReadValue<Vector2>();
+    }
+
+    // Arrastra este método al evento "Salto" en el Inspector
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if (context.performed && grounded)
+        {
+            playerVelocity.y = Mathf.Sqrt(fuerzaSalto * -2f * gravedad);
+        }
+    }
+
+    // Arrastra este método al evento "Correr" en el Inspector
+    public void OnCorrer(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            corriendo = true;
+        else if (context.canceled)
+            corriendo = false;
+    }
+
+    // Arrastra este método al evento "Interactuar" en el Inspector
+    public void OnInteractuar(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            Debug.Log("¡Interactuando!");
+            // Aquí va tu lógica de interacción
+        }
+    }
 }

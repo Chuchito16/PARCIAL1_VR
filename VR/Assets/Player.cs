@@ -89,7 +89,7 @@ public partial class @Player: IInputActionCollection2, IDisposable
     ""name"": ""Player"",
     ""maps"": [
         {
-            ""name"": ""New action map"",
+            ""name"": ""Character"",
             ""id"": ""4532e260-7ac1-46ef-a296-18b5905d51ff"",
             ""actions"": [
                 {
@@ -227,18 +227,18 @@ public partial class @Player: IInputActionCollection2, IDisposable
         }
     ]
 }");
-        // New action map
-        m_Newactionmap = asset.FindActionMap("New action map", throwIfNotFound: true);
-        m_Newactionmap_Movimiento = m_Newactionmap.FindAction("Movimiento", throwIfNotFound: true);
-        m_Newactionmap_Salto = m_Newactionmap.FindAction("Salto", throwIfNotFound: true);
-        m_Newactionmap_Correr = m_Newactionmap.FindAction("Correr", throwIfNotFound: true);
-        m_Newactionmap_Camara = m_Newactionmap.FindAction("Camara", throwIfNotFound: true);
-        m_Newactionmap_Interactuar = m_Newactionmap.FindAction("Interactuar", throwIfNotFound: true);
+        // Character
+        m_Character = asset.FindActionMap("Character", throwIfNotFound: true);
+        m_Character_Movimiento = m_Character.FindAction("Movimiento", throwIfNotFound: true);
+        m_Character_Salto = m_Character.FindAction("Salto", throwIfNotFound: true);
+        m_Character_Correr = m_Character.FindAction("Correr", throwIfNotFound: true);
+        m_Character_Camara = m_Character.FindAction("Camara", throwIfNotFound: true);
+        m_Character_Interactuar = m_Character.FindAction("Interactuar", throwIfNotFound: true);
     }
 
     ~@Player()
     {
-        UnityEngine.Debug.Assert(!m_Newactionmap.enabled, "This will cause a leak and performance issues, Player.Newactionmap.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Character.enabled, "This will cause a leak and performance issues, Player.Character.Disable() has not been called.");
     }
 
     /// <summary>
@@ -311,49 +311,49 @@ public partial class @Player: IInputActionCollection2, IDisposable
         return asset.FindBinding(bindingMask, out action);
     }
 
-    // New action map
-    private readonly InputActionMap m_Newactionmap;
-    private List<INewactionmapActions> m_NewactionmapActionsCallbackInterfaces = new List<INewactionmapActions>();
-    private readonly InputAction m_Newactionmap_Movimiento;
-    private readonly InputAction m_Newactionmap_Salto;
-    private readonly InputAction m_Newactionmap_Correr;
-    private readonly InputAction m_Newactionmap_Camara;
-    private readonly InputAction m_Newactionmap_Interactuar;
+    // Character
+    private readonly InputActionMap m_Character;
+    private List<ICharacterActions> m_CharacterActionsCallbackInterfaces = new List<ICharacterActions>();
+    private readonly InputAction m_Character_Movimiento;
+    private readonly InputAction m_Character_Salto;
+    private readonly InputAction m_Character_Correr;
+    private readonly InputAction m_Character_Camara;
+    private readonly InputAction m_Character_Interactuar;
     /// <summary>
-    /// Provides access to input actions defined in input action map "New action map".
+    /// Provides access to input actions defined in input action map "Character".
     /// </summary>
-    public struct NewactionmapActions
+    public struct CharacterActions
     {
         private @Player m_Wrapper;
 
         /// <summary>
         /// Construct a new instance of the input action map wrapper class.
         /// </summary>
-        public NewactionmapActions(@Player wrapper) { m_Wrapper = wrapper; }
+        public CharacterActions(@Player wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "Newactionmap/Movimiento".
+        /// Provides access to the underlying input action "Character/Movimiento".
         /// </summary>
-        public InputAction @Movimiento => m_Wrapper.m_Newactionmap_Movimiento;
+        public InputAction @Movimiento => m_Wrapper.m_Character_Movimiento;
         /// <summary>
-        /// Provides access to the underlying input action "Newactionmap/Salto".
+        /// Provides access to the underlying input action "Character/Salto".
         /// </summary>
-        public InputAction @Salto => m_Wrapper.m_Newactionmap_Salto;
+        public InputAction @Salto => m_Wrapper.m_Character_Salto;
         /// <summary>
-        /// Provides access to the underlying input action "Newactionmap/Correr".
+        /// Provides access to the underlying input action "Character/Correr".
         /// </summary>
-        public InputAction @Correr => m_Wrapper.m_Newactionmap_Correr;
+        public InputAction @Correr => m_Wrapper.m_Character_Correr;
         /// <summary>
-        /// Provides access to the underlying input action "Newactionmap/Camara".
+        /// Provides access to the underlying input action "Character/Camara".
         /// </summary>
-        public InputAction @Camara => m_Wrapper.m_Newactionmap_Camara;
+        public InputAction @Camara => m_Wrapper.m_Character_Camara;
         /// <summary>
-        /// Provides access to the underlying input action "Newactionmap/Interactuar".
+        /// Provides access to the underlying input action "Character/Interactuar".
         /// </summary>
-        public InputAction @Interactuar => m_Wrapper.m_Newactionmap_Interactuar;
+        public InputAction @Interactuar => m_Wrapper.m_Character_Interactuar;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
-        public InputActionMap Get() { return m_Wrapper.m_Newactionmap; }
+        public InputActionMap Get() { return m_Wrapper.m_Character; }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
         public void Enable() { Get().Enable(); }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
@@ -361,9 +361,9 @@ public partial class @Player: IInputActionCollection2, IDisposable
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
         public bool enabled => Get().enabled;
         /// <summary>
-        /// Implicitly converts an <see ref="NewactionmapActions" /> to an <see ref="InputActionMap" /> instance.
+        /// Implicitly converts an <see ref="CharacterActions" /> to an <see ref="InputActionMap" /> instance.
         /// </summary>
-        public static implicit operator InputActionMap(NewactionmapActions set) { return set.Get(); }
+        public static implicit operator InputActionMap(CharacterActions set) { return set.Get(); }
         /// <summary>
         /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
         /// </summary>
@@ -371,11 +371,11 @@ public partial class @Player: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
         /// </remarks>
-        /// <seealso cref="NewactionmapActions" />
-        public void AddCallbacks(INewactionmapActions instance)
+        /// <seealso cref="CharacterActions" />
+        public void AddCallbacks(ICharacterActions instance)
         {
-            if (instance == null || m_Wrapper.m_NewactionmapActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_NewactionmapActionsCallbackInterfaces.Add(instance);
+            if (instance == null || m_Wrapper.m_CharacterActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_CharacterActionsCallbackInterfaces.Add(instance);
             @Movimiento.started += instance.OnMovimiento;
             @Movimiento.performed += instance.OnMovimiento;
             @Movimiento.canceled += instance.OnMovimiento;
@@ -399,8 +399,8 @@ public partial class @Player: IInputActionCollection2, IDisposable
         /// <remarks>
         /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
         /// </remarks>
-        /// <seealso cref="NewactionmapActions" />
-        private void UnregisterCallbacks(INewactionmapActions instance)
+        /// <seealso cref="CharacterActions" />
+        private void UnregisterCallbacks(ICharacterActions instance)
         {
             @Movimiento.started -= instance.OnMovimiento;
             @Movimiento.performed -= instance.OnMovimiento;
@@ -420,12 +420,12 @@ public partial class @Player: IInputActionCollection2, IDisposable
         }
 
         /// <summary>
-        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="NewactionmapActions.UnregisterCallbacks(INewactionmapActions)" />.
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="CharacterActions.UnregisterCallbacks(ICharacterActions)" />.
         /// </summary>
-        /// <seealso cref="NewactionmapActions.UnregisterCallbacks(INewactionmapActions)" />
-        public void RemoveCallbacks(INewactionmapActions instance)
+        /// <seealso cref="CharacterActions.UnregisterCallbacks(ICharacterActions)" />
+        public void RemoveCallbacks(ICharacterActions instance)
         {
-            if (m_Wrapper.m_NewactionmapActionsCallbackInterfaces.Remove(instance))
+            if (m_Wrapper.m_CharacterActionsCallbackInterfaces.Remove(instance))
                 UnregisterCallbacks(instance);
         }
 
@@ -435,21 +435,21 @@ public partial class @Player: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
         /// </remarks>
-        /// <seealso cref="NewactionmapActions.AddCallbacks(INewactionmapActions)" />
-        /// <seealso cref="NewactionmapActions.RemoveCallbacks(INewactionmapActions)" />
-        /// <seealso cref="NewactionmapActions.UnregisterCallbacks(INewactionmapActions)" />
-        public void SetCallbacks(INewactionmapActions instance)
+        /// <seealso cref="CharacterActions.AddCallbacks(ICharacterActions)" />
+        /// <seealso cref="CharacterActions.RemoveCallbacks(ICharacterActions)" />
+        /// <seealso cref="CharacterActions.UnregisterCallbacks(ICharacterActions)" />
+        public void SetCallbacks(ICharacterActions instance)
         {
-            foreach (var item in m_Wrapper.m_NewactionmapActionsCallbackInterfaces)
+            foreach (var item in m_Wrapper.m_CharacterActionsCallbackInterfaces)
                 UnregisterCallbacks(item);
-            m_Wrapper.m_NewactionmapActionsCallbackInterfaces.Clear();
+            m_Wrapper.m_CharacterActionsCallbackInterfaces.Clear();
             AddCallbacks(instance);
         }
     }
     /// <summary>
-    /// Provides a new <see cref="NewactionmapActions" /> instance referencing this action map.
+    /// Provides a new <see cref="CharacterActions" /> instance referencing this action map.
     /// </summary>
-    public NewactionmapActions @Newactionmap => new NewactionmapActions(this);
+    public CharacterActions @Character => new CharacterActions(this);
     private int m_MandoSchemeIndex = -1;
     /// <summary>
     /// Provides access to the input control scheme.
@@ -477,11 +477,11 @@ public partial class @Player: IInputActionCollection2, IDisposable
         }
     }
     /// <summary>
-    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "New action map" which allows adding and removing callbacks.
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Character" which allows adding and removing callbacks.
     /// </summary>
-    /// <seealso cref="NewactionmapActions.AddCallbacks(INewactionmapActions)" />
-    /// <seealso cref="NewactionmapActions.RemoveCallbacks(INewactionmapActions)" />
-    public interface INewactionmapActions
+    /// <seealso cref="CharacterActions.AddCallbacks(ICharacterActions)" />
+    /// <seealso cref="CharacterActions.RemoveCallbacks(ICharacterActions)" />
+    public interface ICharacterActions
     {
         /// <summary>
         /// Method invoked when associated input action "Movimiento" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
