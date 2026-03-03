@@ -12,151 +12,147 @@ public class PlayerController : MonoBehaviour
 
     [Header("Cámara")]
     public Transform camTransform;
-    public float sensibilidad = 0.15f;
+    public float sensibilidad = 2f;
     public float pitchMin = -80f;
     public float pitchMax = 80f;
 
-    // ── Internos ──────────────────────────────────────────────────────────────
+    // ── Internos ─────────────────────────────────────────────────────────────
     private CharacterController controller;
     private Vector3 playerVelocity;
     private bool grounded;
     private float pitch;
-    private bool corriendo;
-    private bool cursorBloqueado;
 
-    // Input Actions generadas por código — no depende del Inspector
-    private InputAction moveAction;
-    private InputAction lookAction;
-    private InputAction jumpAction;
-    private InputAction runAction;
-    private InputAction interactAction;
-    private InputAction escapeAction;
+    private Vector2 moveInput;
+    private Vector2 lookInput;
+    private bool corriendo;
+
+    // ── Mouse ─────────────────────────────────────────────────────────────────
+    private bool usaMouse = false;
 
     // ── Awake ─────────────────────────────────────────────────────────────────
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
-
-        // Movimiento WASD
-        moveAction = new InputAction("Move", InputActionType.Value);
-        moveAction.AddCompositeBinding("2DVector")
-            .With("Up", "<Keyboard>/w")
-            .With("Down", "<Keyboard>/s")
-            .With("Left", "<Keyboard>/a")
-            .With("Right", "<Keyboard>/d");
-
-        // Cámara: Mouse Delta — este es el correcto para FPS
-        lookAction = new InputAction("Look", InputActionType.Value);
-        lookAction.AddBinding("<Mouse>/delta");
-
-        // Salto
-        jumpAction = new InputAction("Jump", InputActionType.Button);
-        jumpAction.AddBinding("<Keyboard>/space");
-
-        // Correr
-        runAction = new InputAction("Run", InputActionType.Button);
-        runAction.AddBinding("<Keyboard>/leftShift");
-
-        // Interactuar
-        interactAction = new InputAction("Interact", InputActionType.Button);
-        interactAction.AddBinding("<Keyboard>/e");
-
-        // Escape
-        escapeAction = new InputAction("Escape", InputActionType.Button);
-        escapeAction.AddBinding("<Keyboard>/escape");
-
-        // Activar todas
-        moveAction.Enable();
-        lookAction.Enable();
-        jumpAction.Enable();
-        runAction.Enable();
-        interactAction.Enable();
-        escapeAction.Enable();
     }
 
     // ── Start ─────────────────────────────────────────────────────────────────
     private void Start()
     {
-        BloquearCursor(true);
+        // Detectar si este jugador tiene teclado → si sí, usa mouse para cámara
+        PlayerInput pi = GetComponent<PlayerInput>();
+        if (pi != null)
+        {
+            foreach (var device in pi.devices)
+            {
+                if (device is Keyboard)
+                {
+                    SetUsaMouse(true);
+                    break;
+                }
+            }
+        }
     }
 
-    // ── OnDestroy: limpiar acciones ───────────────────────────────────────────
-    private void OnDestroy()
+    public void SetUsaMouse(bool valor)
     {
-        moveAction.Disable();
-        lookAction.Disable();
-        jumpAction.Disable();
-        runAction.Disable();
-        interactAction.Disable();
-        escapeAction.Disable();
+        usaMouse = valor;
+        if (usaMouse)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        Debug.Log($"[PlayerController] {gameObject.name} → usaMouse = {valor}");
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
     private void Update()
     {
-        // Escape
-        if (escapeAction.WasPressedThisFrame())
-            BloquearCursor(!cursorBloqueado);
-
-        // Interactuar
-        if (interactAction.WasPressedThisFrame())
-            Debug.Log("¡Interactuando!");
-
         grounded = controller.isGrounded;
         if (grounded && playerVelocity.y < -2f)
             playerVelocity.y = -2f;
 
-        corriendo = runAction.IsPressed();
+        // Leer mouse delta directo — completamente independiente del InputSystem
+        if (usaMouse && Mouse.current != null)
+        {
+            Vector2 delta = Mouse.current.delta.ReadValue();
+            lookInput = delta;
+        }
 
         HandleMovimiento();
         HandleCamara();
-        HandleSalto();
 
         playerVelocity.y += gravedad * Time.deltaTime;
     }
 
-    // ── Cursor ────────────────────────────────────────────────────────────────
-    private void BloquearCursor(bool bloquear)
-    {
-        cursorBloqueado = bloquear;
-        Cursor.lockState = bloquear ? CursorLockMode.Locked : CursorLockMode.None;
-        Cursor.visible = !bloquear;
-    }
-
-    // ── Movimiento ────────────────────────────────────────────────────────────
+    // ── Lógica de movimiento ──────────────────────────────────────────────────
     private void HandleMovimiento()
     {
         float speed = corriendo ? velocidadCorrer : velocidadCaminar;
-        Vector2 input = moveAction.ReadValue<Vector2>();
 
-        Vector3 moveDir = Vector3.ClampMagnitude(
-            transform.forward * input.y + transform.right * input.x, 1f);
+        Vector3 forward = camTransform != null ? camTransform.forward : transform.forward;
+        Vector3 right = camTransform != null ? camTransform.right : transform.right;
+        forward.y = 0f;
+        right.y = 0f;
+        forward.Normalize();
+        right.Normalize();
 
-        controller.Move((moveDir * speed + Vector3.up * playerVelocity.y) * Time.deltaTime);
+        Vector3 moveDir = (forward * moveInput.y + right * moveInput.x);
+        moveDir = Vector3.ClampMagnitude(moveDir, 1f);
+        Vector3 finalMove = moveDir * speed + Vector3.up * playerVelocity.y;
+        controller.Move(finalMove * Time.deltaTime);
     }
 
-    // ── Cámara ────────────────────────────────────────────────────────────────
+    // ── Lógica de cámara ──────────────────────────────────────────────────────
     private void HandleCamara()
     {
-        if (!cursorBloqueado) return;
+        transform.Rotate(Vector3.up * lookInput.x * sensibilidad);
 
-        Vector2 delta = lookAction.ReadValue<Vector2>();
-
-        // Horizontal → rota el cuerpo del Player
-        transform.Rotate(Vector3.up * delta.x * sensibilidad);
-
-        // Vertical → solo la cámara (pitch)
-        pitch -= delta.y * sensibilidad;
+        pitch -= lookInput.y * sensibilidad;
         pitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
 
         if (camTransform != null)
-            camTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        {
+            Vector3 angles = camTransform.localEulerAngles;
+            angles.x = pitch;
+            camTransform.localEulerAngles = angles;
+        }
     }
 
-    // ── Salto ─────────────────────────────────────────────────────────────────
-    private void HandleSalto()
+    // ═════════════════════════════════════════════════════════════════════════
+    //  EVENTOS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    public void OnMove(InputAction.CallbackContext context)
     {
-        if (jumpAction.WasPressedThisFrame() && grounded)
+        moveInput = context.ReadValue<Vector2>();
+    }
+
+    // Solo activo para gamepad; mouse se lee en Update()
+    public void OnCamara(InputAction.CallbackContext context)
+    {
+        if (!usaMouse)
+            lookInput = context.ReadValue<Vector2>();
+    }
+
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if (context.performed && grounded)
             playerVelocity.y = Mathf.Sqrt(fuerzaSalto * -2f * gravedad);
+    }
+
+    public void OnCorrer(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            corriendo = true;
+        else if (context.canceled)
+            corriendo = false;
+    }
+
+    public void OnInteractuar(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            Debug.Log("¡Interactuando!");
+        }
     }
 }
