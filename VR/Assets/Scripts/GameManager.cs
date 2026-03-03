@@ -45,7 +45,6 @@ public class GameManager : MonoBehaviour
         // Busca GameObjects llamados "SpawnPoint0", "SpawnPoint1", etc.
         // Si no existen simplemente los separa en el eje X
         GameObject spawnPoint = GameObject.Find($"SpawnPoint{index}");
-
         if (spawnPoint != null)
             jugador.transform.position = spawnPoint.transform.position;
         else
