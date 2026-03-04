@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - Menu
+  - Survivor
+  - Hunter
   layers:
   - Default
   - TransparentFX
