@@ -3,8 +3,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Cada jugador que se une recibe su propio prefab según el orden de entrada.
-/// Los prefabs reales NO necesitan tener PlayerInput — se gestiona aquí.
+/// Antes de que cada jugador se una, cambia el prefab del PlayerInputManager
+/// al que corresponde según el orden de entrada. Así PlayerInputManager
+/// spawnea directamente el prefab correcto con los devices ya pareados.
 /// </summary>
 public class GameRoleManager : MonoBehaviour
 {
@@ -21,76 +22,94 @@ public class GameRoleManager : MonoBehaviour
     [Header("Límite")]
     public int maxJugadores = 4;
 
-    // ── Estado interno ────────────────────────────────────────────────────────
     private readonly List<PlayerController> jugadores = new();
+    private PlayerInputManager inputManager;
 
-    // ── Singleton ─────────────────────────────────────────────────────────────
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
 
+    private void Start()
+    {
+        inputManager = GetComponent<PlayerInputManager>();
+        if (inputManager == null)
+            inputManager = FindFirstObjectByType<PlayerInputManager>();
+
+        if (inputManager == null)
+        {
+            Debug.LogError("[GameRoleManager] No se encontró PlayerInputManager en la escena.");
+            return;
+        }
+
+        // Prepara el primer prefab (Cazador) antes de que alguien se una
+        ActualizarPrefabDelManager();
+    }
+
     // ── PlayerInputManager.onPlayerJoined apunta aquí ─────────────────────────
-    public void OnPlayerJoined(PlayerInput inputTemporal)
+    public void OnPlayerJoined(PlayerInput playerInput)
     {
         int playerIndex = jugadores.Count;
 
         if (playerIndex >= maxJugadores)
         {
             Debug.LogWarning("[GameRoleManager] Límite de jugadores alcanzado.");
-            Destroy(inputTemporal.gameObject);
+            Destroy(playerInput.gameObject);
             return;
         }
 
-        if (playerIndex >= playerPrefabs.Length || playerPrefabs[playerIndex] == null)
-        {
-            Debug.LogError($"[GameRoleManager] No hay prefab para el jugador {playerIndex + 1}.");
-            Destroy(inputTemporal.gameObject);
-            return;
-        }
-
-        // ── Guardar devices ANTES de destruir el objeto temporal ──────────────
-        InputDevice[] devices = inputTemporal.devices.ToArray();
-        bool usaTeclado = false;
-        foreach (var d in devices)
-            if (d is Keyboard) { usaTeclado = true; break; }
-
-        // ── Destruir prefab trampolín ──────────────────────────────────────────
-        Destroy(inputTemporal.gameObject);
-
-        // ── Calcular spawn ─────────────────────────────────────────────────────
+        // ── Mover al spawn correcto ────────────────────────────────────────────
         Transform spawn = ObtenerSpawnPoint(playerIndex);
-        Vector3 pos = spawn != null ? spawn.position : Vector3.zero;
-        Quaternion rot = spawn != null ? spawn.rotation : Quaternion.identity;
-
-        // ── Instanciar el prefab real normalmente ──────────────────────────────
-        GameObject instancia = Instantiate(playerPrefabs[playerIndex], pos, rot);
-        instancia.name = $"Jugador_{playerIndex + 1}_{playerPrefabs[playerIndex].name}";
+        if (spawn != null)
+            playerInput.transform.SetPositionAndRotation(spawn.position, spawn.rotation);
 
         // ── PlayerController ───────────────────────────────────────────────────
-        PlayerController pc = instancia.GetComponent<PlayerController>();
+        PlayerController pc = playerInput.GetComponent<PlayerController>();
         if (pc == null)
         {
-            Debug.LogError($"[GameRoleManager] '{playerPrefabs[playerIndex].name}' necesita PlayerController.");
+            Debug.LogError($"[GameRoleManager] '{playerInput.gameObject.name}' no tiene PlayerController.");
             return;
         }
 
         jugadores.Add(pc);
 
-        if (usaTeclado)
-            pc.SetUsaMouse(true);
+        // Detectar teclado → activar mouse
+        foreach (var device in playerInput.devices)
+            if (device is Keyboard) { pc.SetUsaMouse(true); break; }
 
         // ── Asignar rol ───────────────────────────────────────────────────────
-        if (playerIndex == 0) ConfigurarCazador(instancia);
-        else ConfigurarSobreviviente(instancia);
+        if (playerIndex == 0) ConfigurarCazador(playerInput.gameObject);
+        else ConfigurarSobreviviente(playerInput.gameObject);
 
-        Debug.Log($"[GameRoleManager] Jugador {playerIndex + 1} → " +
-                  $"'{playerPrefabs[playerIndex].name}' como " +
-                  $"{(playerIndex == 0 ? "CAZADOR" : "SOBREVIVIENTE")}");
+        Debug.Log($"[GameRoleManager] Jugador {playerIndex + 1} unido como " +
+                  $"{(playerIndex == 0 ? "CAZADOR" : "SOBREVIVIENTE")} " +
+                  $"con prefab '{playerInput.gameObject.name}'");
+
+        // ── Preparar el prefab para el SIGUIENTE jugador ───────────────────────
+        ActualizarPrefabDelManager();
     }
 
-    // ── Spawn point ───────────────────────────────────────────────────────────
+    // ── Cambia el playerPrefab del manager al siguiente en la lista ───────────
+    private void ActualizarPrefabDelManager()
+    {
+        if (inputManager == null) return;
+
+        int siguiente = jugadores.Count; // después de añadir ya apunta al próximo
+        if (siguiente < playerPrefabs.Length && playerPrefabs[siguiente] != null)
+        {
+            inputManager.playerPrefab = playerPrefabs[siguiente];
+            Debug.Log($"[GameRoleManager] Siguiente prefab listo: '{playerPrefabs[siguiente].name}'");
+        }
+        else
+        {
+            // No quedan más prefabs, deshabilitar joining
+            inputManager.DisableJoining();
+            Debug.Log("[GameRoleManager] No hay más slots disponibles, joining desactivado.");
+        }
+    }
+
+    // ── Spawn points ──────────────────────────────────────────────────────────
     private Transform ObtenerSpawnPoint(int index)
     {
         if (index == 0) return hunterSpawnPoint;
@@ -107,13 +126,12 @@ public class GameRoleManager : MonoBehaviour
         if (cam != null && cam.GetComponent<HunterVision>() == null)
             cam.gameObject.AddComponent<HunterVision>();
         else if (cam == null)
-            Debug.LogWarning("[GameRoleManager] El prefab del Cazador no tiene Camera hija.");
+            Debug.LogWarning("[GameRoleManager] El prefab Cazador no tiene Camera hija.");
     }
 
     private void ConfigurarSobreviviente(GameObject jugador)
     {
         jugador.tag = "Survivor";
-
         SurvivorDeafness deafness = jugador.AddComponent<SurvivorDeafness>();
         deafness.Inicializar(jugador);
     }
