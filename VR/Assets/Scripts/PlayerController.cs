@@ -185,10 +185,6 @@ public class PlayerController : MonoBehaviour
         controller.enabled = false;
     }
 
-    // ═════════════════════════════════════════════════════════════════════════
-    //  EVENTOS DE INPUT
-    // ═════════════════════════════════════════════════════════════════════════
-
     public void OnMove(InputAction.CallbackContext context)
         => moveInput = context.ReadValue<Vector2>();
 
