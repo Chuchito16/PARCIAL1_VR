@@ -1,9 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Adjunta este script al Canvas de la máquina.
-/// Hace que el Canvas siempre mire hacia la cámara activa.
-/// </summary>
+
 public class MirarCamara : MonoBehaviour
 {
     private void LateUpdate()
