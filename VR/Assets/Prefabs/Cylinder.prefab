@@ -250,7 +250,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   velocidadCaminar: 5
   velocidadCorrer: 10
-  fuerzaSalto: 5
+  fuerzaSalto: 0.1
   gravedad: -9.81
   camTransform: {fileID: 1485031620856776676}
   sensibilidad: 2
