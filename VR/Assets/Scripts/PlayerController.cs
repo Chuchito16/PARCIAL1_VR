@@ -20,7 +20,7 @@ public class PlayerController : MonoBehaviour
     public float radioDeteccionMaquina = 2f;
     public LayerMask layerMaquinas;
 
-    // ── Internos ──────────────────────────────────────────────────────────────
+    
     private CharacterController controller;
     private Vector3 playerVelocity;
     private bool grounded;
@@ -31,14 +31,14 @@ public class PlayerController : MonoBehaviour
     private bool corriendo;
     private bool usaMouse = false;
 
-    // ── Estado ────────────────────────────────────────────────────────────────
+
     public bool EstaVivo { get; private set; } = true;
 
-    // ── Máquina actual ────────────────────────────────────────────────────────
+   
     private MachineRepair maquinaActual = null;
     private bool presionandoInteraccion = false;
 
-    // ── Ataque (cazador) ──────────────────────────────────────────────────────
+
     private HunterAttack hunterAttack;
 
     private void Awake()
@@ -147,7 +147,7 @@ public class PlayerController : MonoBehaviour
         Debug.Log($"[PlayerController] {gameObject.name} revivido.");
     }
 
-    // ── Eventos Input ─────────────────────────────────────────────────────────
+    
     public void OnMove(InputAction.CallbackContext ctx)
         => moveInput = ctx.ReadValue<Vector2>();
 

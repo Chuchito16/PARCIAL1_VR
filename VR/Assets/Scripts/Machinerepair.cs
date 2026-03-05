@@ -2,13 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Máquina reparable por los sobrevivientes.
-/// El jugador debe mantenerse cerca y presionar Interactuar (E/South button)
-/// durante 'tiempoReparacion' segundos para completarla.
-///
-/// Notifica a ExitDoor automáticamente cuando se repara.
-/// </summary>
+
 public class MachineRepair : MonoBehaviour
 {
     [Header("Reparación")]
@@ -22,13 +16,12 @@ public class MachineRepair : MonoBehaviour
     public MeshRenderer indicadorLuz;
 
     [Header("Highlight (Visible a través de paredes)")]
-    public GameObject highlightVisual;   // Mesh rojo que marca la máquina
+    public GameObject highlightVisual;   
 
     [Header("Audio")]
     public AudioClip sonidoReparando;
     public AudioClip sonidoCompletado;
 
-    // ── Estado ────────────────────────────────────────────────────────────────
     public bool EstaReparada { get; private set; } = false;
 
     private float progresoActual = 0f;
@@ -37,17 +30,16 @@ public class MachineRepair : MonoBehaviour
 
     private AudioSource audioSource;
 
-    // ── Evento ────────────────────────────────────────────────────────────────
     public event Action<MachineRepair> OnReparada;
 
-    // ── Init ──────────────────────────────────────────────────────────────────
+
     private void Awake()
     {
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
             audioSource = gameObject.AddComponent<AudioSource>();
 
-        // Activar highlight rojo al inicio
+   
         if (highlightVisual != null)
             highlightVisual.SetActive(true);
 
@@ -55,7 +47,7 @@ public class MachineRepair : MonoBehaviour
         ActualizarLuz(false);
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
+
     private void Update()
     {
         if (EstaReparada) return;
@@ -64,7 +56,7 @@ public class MachineRepair : MonoBehaviour
         {
             progresoActual += Time.deltaTime;
 
-            // Sonido continuo de reparación
+       
             if (sonidoReparando != null && !audioSource.isPlaying)
                 audioSource.PlayOneShot(sonidoReparando);
 
@@ -82,7 +74,7 @@ public class MachineRepair : MonoBehaviour
         ActualizarUI();
     }
 
-    // ── Trigger de proximidad ─────────────────────────────────────────────────
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Survivor"))
@@ -106,14 +98,13 @@ public class MachineRepair : MonoBehaviour
         }
     }
 
-    // ── Llamado desde PlayerController.OnInteractuar ──────────────────────────
     public void SetInteractuando(bool valor)
     {
         if (EstaReparada) return;
         jugadorInteractuando = valor;
     }
 
-    // ── Completar reparación ──────────────────────────────────────────────────
+
     private void Completar()
     {
         EstaReparada = true;
@@ -129,7 +120,6 @@ public class MachineRepair : MonoBehaviour
         if (promptUI != null)
             promptUI.SetActive(false);
 
-        // 🔴 Desaparece el highlight rojo cuando se repara
         if (highlightVisual != null)
             highlightVisual.SetActive(false);
 
@@ -138,7 +128,6 @@ public class MachineRepair : MonoBehaviour
         OnReparada?.Invoke(this);
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
     private void ActualizarUI()
     {
         if (barraProgreso != null)
@@ -153,11 +142,11 @@ public class MachineRepair : MonoBehaviour
         if (indicadorLuz == null) return;
 
         indicadorLuz.material.color = reparada
-            ? new Color(0.1f, 0.9f, 0.1f)   // Verde
-            : new Color(0.9f, 0.1f, 0.1f);  // Rojo
+            ? new Color(0.1f, 0.9f, 0.1f)   
+            : new Color(0.9f, 0.1f, 0.1f);  
     }
 
-    // ── Gizmo de rango en editor ──────────────────────────────────────────────
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;

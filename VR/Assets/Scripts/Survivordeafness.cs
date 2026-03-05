@@ -1,15 +1,8 @@
 using UnityEngine;
 using UnityEngine.Audio;
 
-/// <summary>
-/// Hace al sobreviviente "sordo":
-///   - Desactiva su AudioListener
-///   - Opcionalmente añade UI de icono de "sin audio"
-///
-/// En un juego local split-screen con múltiples AudioListeners,
-/// Unity emite advertencia; puedes usar AudioMixerGroups por jugador
-/// o simplemente deshabilitar el listener del sobreviviente.
-/// </summary>
+
+
 public class SurvivorDeafness : MonoBehaviour
 {
     [Header("Opciones")]
@@ -22,12 +15,10 @@ public class SurvivorDeafness : MonoBehaviour
     private AudioListener audioListener;
     private GameObject deafIcon;
 
-    /// <summary>
-    /// Llamado por GameRoleManager al registrar al sobreviviente.
-    /// </summary>
+    
     public void Inicializar(GameObject jugador)
     {
-        // Buscar AudioListener en la cámara hija
+        
         audioListener = jugador.GetComponentInChildren<AudioListener>();
 
         if (audioListener != null && desactivarAudioListener)
@@ -39,10 +30,10 @@ public class SurvivorDeafness : MonoBehaviour
         MostrarIconoSordera(jugador);
     }
 
-    // ── UI: ícono "sin audio" ─────────────────────────────────────────────────
+ 
     private void MostrarIconoSordera(GameObject jugador)
     {
-        // Buscar Canvas del jugador (si existe un HUD por jugador)
+       
         Canvas hud = jugador.GetComponentInChildren<Canvas>();
         if (hud == null) return;
 
@@ -51,7 +42,7 @@ public class SurvivorDeafness : MonoBehaviour
 
         UnityEngine.UI.Image img = deafIcon.AddComponent<UnityEngine.UI.Image>();
 
-        // Cuadrado rojo en esquina superior derecha como indicador
+        
         img.color = new Color(0.8f, 0.1f, 0.1f, 0.75f);
 
         RectTransform rect = deafIcon.GetComponent<RectTransform>();
@@ -61,7 +52,7 @@ public class SurvivorDeafness : MonoBehaviour
         rect.anchoredPosition = new Vector2(-10f, -10f);
         rect.sizeDelta = new Vector2(30f, 30f);
 
-        // Texto "🔇" encima
+       
         GameObject textGO = new GameObject("DeafLabel");
         textGO.transform.SetParent(deafIcon.transform, false);
         var label = textGO.AddComponent<UnityEngine.UI.Text>();
@@ -76,7 +67,7 @@ public class SurvivorDeafness : MonoBehaviour
         labelRect.offsetMax = Vector2.zero;
     }
 
-    // ── Restaurar audio (por si acaso se usa un power-up o evento) ────────────
+    
     public void RestaurarAudio()
     {
         if (audioListener != null)

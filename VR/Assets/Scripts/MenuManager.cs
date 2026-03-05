@@ -13,25 +13,24 @@ public class MainMenuManager : MonoBehaviour
         MostrarPanel(panelMain);
     }
 
-    // ─── BOTÓN: JUGAR ───────────────────────────────────────────
+
     public void Jugar()
     {
         SceneManager.LoadScene("Level01");
     }
 
-    // ─── BOTÓN: OPTIONS ─────────────────────────────────────────
+
     public void AbrirOptions()
     {
         MostrarPanel(panelOptions);
     }
 
-    // ─── BOTÓN: CRÉDITOS ────────────────────────────────────────
     public void AbrirCreditos()
     {
         MostrarPanel(panelCreditos);
     }
 
-    // ─── BOTÓN: EXIT ────────────────────────────────────────────
+ 
     public void Salir()
     {
 #if UNITY_EDITOR
@@ -41,13 +40,13 @@ public class MainMenuManager : MonoBehaviour
 #endif
     }
 
-    // ─── BOTÓN: VOLVER (Back) ────────────────────────────────────
+
     public void Volver()
     {
         MostrarPanel(panelMain);
     }
 
-    // ─── HELPER ──────────────────────────────────────────────────
+
     private void MostrarPanel(GameObject panelActivo)
     {
         panelMain.SetActive(false);

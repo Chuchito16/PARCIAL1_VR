@@ -36,8 +36,7 @@ public class HunterVision : MonoBehaviour
 
     private void Update()
     {
-        // Actualizar posición y tamaño del overlay para que coincida
-        // exactamente con el viewport de ESTA cámara en pantalla
+      
         ActualizarRectOverlay();
 
         offsetX += velocidadDesplaz * Time.deltaTime * 0.7f;
@@ -48,21 +47,21 @@ public class HunterVision : MonoBehaviour
         img.texture = tex;
     }
 
-    // ── Ajustar el RectTransform al viewport de esta cámara ───────────────────
+
     private void ActualizarRectOverlay()
     {
-        Rect vp = cam.rect; // valores 0..1 del viewport en pantalla
+        Rect vp = cam.rect; 
 
         float sw = Screen.width;
         float sh = Screen.height;
 
-        // Convertir de viewport (0..1) a píxeles de pantalla
+       
         float px = vp.x * sw;
         float py = vp.y * sh;
         float pw = vp.width * sw;
         float ph = vp.height * sh;
 
-        // El Canvas ScreenSpaceOverlay usa coordenadas de píxel directamente
+    
         RectTransform rt = img.rectTransform;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.zero;
@@ -74,7 +73,7 @@ public class HunterVision : MonoBehaviour
     private void Construir()
     {
         GameObject go = new GameObject("HunterFog");
-        // Hijo de la escena, NO de la cámara, para que no se duplique
+    
         go.transform.SetParent(null);
 
         canvas = go.AddComponent<Canvas>();
@@ -89,7 +88,7 @@ public class HunterVision : MonoBehaviour
         img = imgGO.AddComponent<RawImage>();
         img.color = Color.white;
 
-        // Posición inicial
+     
         ActualizarRectOverlay();
 
         GenerarTextura(radioVisible);
@@ -143,7 +142,7 @@ public class HunterVision : MonoBehaviour
         foreach (var c in GetComponentsInChildren<Canvas>())
             Destroy(c.gameObject);
 
-        // Buscar canvas huérfanos de versiones anteriores por nombre
+       
         foreach (string n in new[]{ "HunterFog", "HunterVignette",
                                      "HunterDarknessOverlay" })
         {

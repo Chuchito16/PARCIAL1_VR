@@ -18,9 +18,7 @@ public class ExitDoor : MonoBehaviour
     public float esperaAntesDeCarga = 2f;
 
     [Header("UI")]
-    public GameObject promptEntrada; // optional
-
-    // State
+    public GameObject promptEntrada; 
     public bool EstaAbierta { get; private set; } = false;
 
     private int maquinasReparadas = 0;
@@ -55,16 +53,16 @@ public class ExitDoor : MonoBehaviour
 
             maquinasRequeridas++;
 
-            // Subscribe to repair event
+           
             m.OnReparada += ManejarMaquinaReparada;
 
-            // If machine is already repaired, count it now
+           
             if (m.EstaReparada) maquinasReparadas++;
         }
 
         Debug.Log("[ExitDoor] Machines required: " + maquinasRequeridas + ". Already repaired: " + maquinasReparadas);
 
-        // If all were already repaired, open immediately
+        
         if (maquinasRequeridas > 0 && maquinasReparadas >= maquinasRequeridas)
             Abrir();
 
@@ -72,7 +70,6 @@ public class ExitDoor : MonoBehaviour
         Debug.Log("[ExitDoor] Survivors alive: " + sobrevivientesVivos);
     }
 
-    // Called from SurvivorHealth when someone dies
     public void NotificarSobrevivienteMuerto()
     {
         RecalcularSobrevivientesVivos();
@@ -153,7 +150,7 @@ public class ExitDoor : MonoBehaviour
 
     private IEnumerator CargarSiguienteNivel()
     {
-        // Revive dead before scene change (optional)
+      
         foreach (var s in FindObjectsByType<SurvivorHealth>(FindObjectsSortMode.None))
         {
             if (s != null && !s.EstaVivo) s.Revivir();
