@@ -17,9 +17,12 @@ public class MachineRepair : MonoBehaviour
     public float radioInteraccion = 2f;
 
     [Header("Feedback Visual")]
-    public GameObject promptUI;          // "Mantén E para reparar"
+    public GameObject promptUI;
     public Slider barraProgreso;
-    public MeshRenderer indicadorLuz;    // Cambia de rojo a verde al reparar
+    public MeshRenderer indicadorLuz;
+
+    [Header("Highlight (Visible a través de paredes)")]
+    public GameObject highlightVisual;   // Mesh rojo que marca la máquina
 
     [Header("Audio")]
     public AudioClip sonidoReparando;
@@ -44,6 +47,10 @@ public class MachineRepair : MonoBehaviour
         if (audioSource == null)
             audioSource = gameObject.AddComponent<AudioSource>();
 
+        // Activar highlight rojo al inicio
+        if (highlightVisual != null)
+            highlightVisual.SetActive(true);
+
         ActualizarUI();
         ActualizarLuz(false);
     }
@@ -66,9 +73,10 @@ public class MachineRepair : MonoBehaviour
         }
         else
         {
-            // Decaimiento del progreso si se suelta (opcional: quitar si no quieres decaimiento)
             progresoActual = Mathf.Max(0f, progresoActual - Time.deltaTime * 0.5f);
-            if (audioSource.isPlaying) audioSource.Stop();
+
+            if (audioSource.isPlaying)
+                audioSource.Stop();
         }
 
         ActualizarUI();
@@ -80,7 +88,9 @@ public class MachineRepair : MonoBehaviour
         if (other.CompareTag("Survivor"))
         {
             jugadorEnRango = true;
-            if (promptUI != null) promptUI.SetActive(true);
+
+            if (promptUI != null)
+                promptUI.SetActive(true);
         }
     }
 
@@ -90,15 +100,13 @@ public class MachineRepair : MonoBehaviour
         {
             jugadorEnRango = false;
             jugadorInteractuando = false;
-            if (promptUI != null) promptUI.SetActive(false);
+
+            if (promptUI != null)
+                promptUI.SetActive(false);
         }
     }
 
     // ── Llamado desde PlayerController.OnInteractuar ──────────────────────────
-    /// <summary>
-    /// El PlayerController debe llamar este método cuando detecta
-    /// que la máquina más cercana está en rango.
-    /// </summary>
     public void SetInteractuando(bool valor)
     {
         if (EstaReparada) return;
@@ -118,9 +126,15 @@ public class MachineRepair : MonoBehaviour
         ActualizarLuz(true);
         ActualizarUI();
 
-        if (promptUI != null) promptUI.SetActive(false);
+        if (promptUI != null)
+            promptUI.SetActive(false);
+
+        // 🔴 Desaparece el highlight rojo cuando se repara
+        if (highlightVisual != null)
+            highlightVisual.SetActive(false);
 
         Debug.Log($"[MachineRepair] {gameObject.name} reparada.");
+
         OnReparada?.Invoke(this);
     }
 
@@ -137,6 +151,7 @@ public class MachineRepair : MonoBehaviour
     private void ActualizarLuz(bool reparada)
     {
         if (indicadorLuz == null) return;
+
         indicadorLuz.material.color = reparada
             ? new Color(0.1f, 0.9f, 0.1f)   // Verde
             : new Color(0.9f, 0.1f, 0.1f);  // Rojo
