@@ -163,7 +163,17 @@ public class PlayerController : MonoBehaviour
     public void OnCorrer(InputAction.CallbackContext ctx)
     { if (ctx.performed) corriendo = true; else if (ctx.canceled) corriendo = false; }
 
-   
+    public void OnInteractuar(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            
+        }
+        else if (ctx.canceled)
+        {
+            presionandoInteraccion = false;
+        }
+    }
 
     private void OnDrawGizmosSelected()
     {
