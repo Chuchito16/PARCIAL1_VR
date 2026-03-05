@@ -18,9 +18,7 @@ public class ExitDoor : MonoBehaviour
     public float esperaAntesDeCarga = 2f;
 
     [Header("UI")]
-    public GameObject promptEntrada; // optional
-
-    // State
+    public GameObject promptEntrada; 
     public bool EstaAbierta { get; private set; } = false;
 
     private int maquinasReparadas = 0;
@@ -28,6 +26,8 @@ public class ExitDoor : MonoBehaviour
 
     private int sobrevivientesVivos = 0;
     private int sobrevivientesCruzaron = 0;
+
+    private bool cargandoNivel = false;
 
     private readonly HashSet<GameObject> yaEntraron = new HashSet<GameObject>();
 
@@ -55,16 +55,16 @@ public class ExitDoor : MonoBehaviour
 
             maquinasRequeridas++;
 
-            // Subscribe to repair event
+           
             m.OnReparada += ManejarMaquinaReparada;
 
-            // If machine is already repaired, count it now
+           
             if (m.EstaReparada) maquinasReparadas++;
         }
 
         Debug.Log("[ExitDoor] Machines required: " + maquinasRequeridas + ". Already repaired: " + maquinasReparadas);
 
-        // If all were already repaired, open immediately
+        
         if (maquinasRequeridas > 0 && maquinasReparadas >= maquinasRequeridas)
             Abrir();
 
@@ -72,7 +72,6 @@ public class ExitDoor : MonoBehaviour
         Debug.Log("[ExitDoor] Survivors alive: " + sobrevivientesVivos);
     }
 
-    // Called from SurvivorHealth when someone dies
     public void NotificarSobrevivienteMuerto()
     {
         RecalcularSobrevivientesVivos();
@@ -131,29 +130,42 @@ public class ExitDoor : MonoBehaviour
         yaEntraron.Add(go);
         sobrevivientesCruzaron++;
 
-        Debug.Log("[ExitDoor] " + other.name + " crossed (" + sobrevivientesCruzaron + "/" + sobrevivientesVivos + ")");
+        // Recalcular SIEMPRE antes de verificar
+        RecalcularSobrevivientesVivos();
+
+        Debug.Log($"[ExitDoor] {other.name} cruzó ({sobrevivientesCruzaron}/{sobrevivientesVivos})");
 
         VerificarCondicionVictoria();
     }
 
     private void VerificarCondicionVictoria()
     {
-        if (sobrevivientesVivos <= 0)
+        if (cargandoNivel) return;
+
+        RecalcularSobrevivientesVivos();
+
+        Debug.Log($"[ExitDoor] Verificando: cruzaron={sobrevivientesCruzaron}, vivos={sobrevivientesVivos}");
+
+        // Si no hay survivors vivos pero alguien cruzó, avanzar igual
+        if (sobrevivientesVivos <= 0 && sobrevivientesCruzaron > 0)
         {
-            Debug.LogWarning("[ExitDoor] No alive survivors detected. Check SurvivorHealth and tags.");
+            Debug.Log("[ExitDoor] Sin survivors vivos restantes, cargando nivel...");
+            cargandoNivel = true;
+            StartCoroutine(CargarSiguienteNivel());
             return;
         }
 
-        if (sobrevivientesCruzaron >= sobrevivientesVivos)
+        if (sobrevivientesVivos > 0 && sobrevivientesCruzaron >= sobrevivientesVivos)
         {
-            Debug.Log("[ExitDoor] All crossed! Loading next level...");
+            Debug.Log("[ExitDoor] ¡Todos cruzaron! Cargando siguiente nivel...");
+            cargandoNivel = true;
             StartCoroutine(CargarSiguienteNivel());
         }
     }
 
     private IEnumerator CargarSiguienteNivel()
     {
-        // Revive dead before scene change (optional)
+      
         foreach (var s in FindObjectsByType<SurvivorHealth>(FindObjectsSortMode.None))
         {
             if (s != null && !s.EstaVivo) s.Revivir();

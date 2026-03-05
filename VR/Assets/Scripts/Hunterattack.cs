@@ -1,10 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-/// <summary>
-/// Permite al cazador golpear sobrevivientes cercanos al presionar Interactuar.
-/// Se adjunta automáticamente junto con PlayerController en el prefab del cazador.
-/// </summary>
+
 public class HunterAttack : MonoBehaviour
 {
     private bool cooldown = false;
