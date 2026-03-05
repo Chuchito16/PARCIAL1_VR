@@ -1,69 +1,58 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
-public class MenuManager : MonoBehaviour
+public class MainMenuManager : MonoBehaviour
 {
     [Header("Paneles")]
-    public GameObject panelMenu;
+    public GameObject panelMain;
+    public GameObject panelOptions;
     public GameObject panelCreditos;
-    public GameObject panelOpciones;
-
-    [Header("Audio")]
-    public AudioSource musicaFondo;
-    public Slider sliderVolumen;
 
     void Start()
     {
-        panelMenu.SetActive(true);
-        panelCreditos.SetActive(false);
-        panelOpciones.SetActive(false);
-
-        if (sliderVolumen != null)
-        {
-            sliderVolumen.value = musicaFondo.volume;
-            sliderVolumen.onValueChanged.AddListener(CambiarVolumen);
-        }
+        MostrarPanel(panelMain);
     }
 
-    // ▶️ INICIAR JUEGO
-    public void IniciarJuego()
+    // ─── BOTÓN: JUGAR ───────────────────────────────────────────
+    public void Jugar()
     {
-        SceneManager.LoadScene("NombreDeTuEscenaDelJuego");
+        SceneManager.LoadScene("Level01");
     }
 
-    // 🎬 MOSTRAR CREDITOS
-    public void MostrarCreditos()
+    // ─── BOTÓN: OPTIONS ─────────────────────────────────────────
+    public void AbrirOptions()
     {
-        panelMenu.SetActive(false);
-        panelCreditos.SetActive(true);
+        MostrarPanel(panelOptions);
     }
 
-    // ⚙️ MOSTRAR OPCIONES
-    public void MostrarOpciones()
+    // ─── BOTÓN: CRÉDITOS ────────────────────────────────────────
+    public void AbrirCreditos()
     {
-        panelMenu.SetActive(false);
-        panelOpciones.SetActive(true);
+        MostrarPanel(panelCreditos);
     }
 
-    // 🔙 VOLVER AL MENU
-    public void VolverMenu()
-    {
-        panelMenu.SetActive(true);
-        panelCreditos.SetActive(false);
-        panelOpciones.SetActive(false);
-    }
-
-    // 🔊 CAMBIAR VOLUMEN
-    public void CambiarVolumen(float valor)
-    {
-        musicaFondo.volume = valor;
-    }
-
-    // ❌ SALIR
+    // ─── BOTÓN: EXIT ────────────────────────────────────────────
     public void Salir()
     {
-        Application.Quit();
-        Debug.Log("Juego cerrado");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+    }
+
+    // ─── BOTÓN: VOLVER (Back) ────────────────────────────────────
+    public void Volver()
+    {
+        MostrarPanel(panelMain);
+    }
+
+    // ─── HELPER ──────────────────────────────────────────────────
+    private void MostrarPanel(GameObject panelActivo)
+    {
+        panelMain.SetActive(false);
+        panelOptions.SetActive(false);
+        panelCreditos.SetActive(false);
+        panelActivo.SetActive(true);
     }
 }
