@@ -5,31 +5,32 @@ using UnityEngine.SceneManagement;
 
 public class ExitDoor : MonoBehaviour
 {
-    [Header("Máquinas requeridas")]
+    [Header("Required machines")]
     public MachineRepair[] maquinas;
 
-    [Header("Puerta")]
-    [Tooltip("GameObject de la puerta brillante — se activa al reparar todas las máquinas")]
+    [Header("Door")]
+    [Tooltip("Door visual object, activated when all machines are repaired")]
     public GameObject puertaVisual;
     public Light luzPuerta;
 
-    [Header("Siguiente nivel")]
+    [Header("Next level")]
     public string nombreSiguienteNivel = "Level02";
     public float esperaAntesDeCarga = 2f;
 
     [Header("UI")]
-    public GameObject promptEntrada; // "¡Salida desbloqueada!" (opcional)
+    public GameObject promptEntrada; // optional
 
-    // ── Estado ────────────────────────────────────────────────────────────────
+    // State
     public bool EstaAbierta { get; private set; } = false;
 
     private int maquinasReparadas = 0;
+    private int maquinasRequeridas = 0;
+
     private int sobrevivientesVivos = 0;
     private int sobrevivientesCruzaron = 0;
 
-    private readonly HashSet<GameObject> yaEntraron = new();
+    private readonly HashSet<GameObject> yaEntraron = new HashSet<GameObject>();
 
-    // ── Init ──────────────────────────────────────────────────────────────────
     private void Awake()
     {
         if (puertaVisual != null) puertaVisual.SetActive(false);
@@ -39,89 +40,138 @@ public class ExitDoor : MonoBehaviour
 
     private void Start()
     {
+        maquinasReparadas = 0;
+        maquinasRequeridas = 0;
+
+        if (maquinas == null || maquinas.Length == 0)
+        {
+            Debug.LogError("[ExitDoor] No machines assigned in inspector.");
+            return;
+        }
+
         foreach (var m in maquinas)
-            if (m != null) m.OnReparada += ManejarMaquinaReparada;
+        {
+            if (m == null) continue;
+
+            maquinasRequeridas++;
+
+            // Subscribe to repair event
+            m.OnReparada += ManejarMaquinaReparada;
+
+            // If machine is already repaired, count it now
+            if (m.EstaReparada) maquinasReparadas++;
+        }
+
+        Debug.Log("[ExitDoor] Machines required: " + maquinasRequeridas + ". Already repaired: " + maquinasReparadas);
+
+        // If all were already repaired, open immediately
+        if (maquinasRequeridas > 0 && maquinasReparadas >= maquinasRequeridas)
+            Abrir();
 
         RecalcularSobrevivientesVivos();
-        Debug.Log($"[ExitDoor] Esperando {maquinas.Length} máquinas. Sobrevivientes: {sobrevivientesVivos}");
+        Debug.Log("[ExitDoor] Survivors alive: " + sobrevivientesVivos);
     }
 
-    // ── Llamado desde SurvivorHealth ──────────────────────────────────────────
+    // Called from SurvivorHealth when someone dies
     public void NotificarSobrevivienteMuerto()
     {
         RecalcularSobrevivientesVivos();
-        Debug.Log($"[ExitDoor] Sobreviviente muerto. Vivos: {sobrevivientesVivos}");
+        Debug.Log("[ExitDoor] Survivor died. Alive: " + sobrevivientesVivos);
+
         if (EstaAbierta) VerificarCondicionVictoria();
     }
 
     private void RecalcularSobrevivientesVivos()
     {
         sobrevivientesVivos = 0;
+
         foreach (var s in FindObjectsByType<SurvivorHealth>(FindObjectsSortMode.None))
-            if (s.EstaVivo) sobrevivientesVivos++;
+        {
+            if (s != null && s.EstaVivo) sobrevivientesVivos++;
+        }
     }
 
-    // ── Máquina reparada ──────────────────────────────────────────────────────
     private void ManejarMaquinaReparada(MachineRepair m)
     {
         maquinasReparadas++;
-        Debug.Log($"[ExitDoor] Máquinas: {maquinasReparadas}/{maquinas.Length}");
-        if (maquinasReparadas >= maquinas.Length) Abrir();
+        Debug.Log("[ExitDoor] Machines: " + maquinasReparadas + "/" + maquinasRequeridas);
+
+        if (maquinasRequeridas > 0 && maquinasReparadas >= maquinasRequeridas)
+            Abrir();
     }
 
-    // ── Abrir puerta ──────────────────────────────────────────────────────────
     private void Abrir()
     {
         if (EstaAbierta) return;
         EstaAbierta = true;
 
         if (puertaVisual != null) puertaVisual.SetActive(true);
+        else Debug.LogWarning("[ExitDoor] puertaVisual is NOT assigned.");
+
         if (luzPuerta != null) luzPuerta.color = new Color(0.4f, 0.8f, 1f);
+
         if (promptEntrada != null) promptEntrada.SetActive(true);
 
         RecalcularSobrevivientesVivos();
-        Debug.Log($"[ExitDoor] ¡Puerta abierta! Necesitan cruzar: {sobrevivientesVivos}");
+        Debug.Log("[ExitDoor] Door open! Need to cross: " + sobrevivientesVivos);
     }
 
-    // ── Sobreviviente entra ───────────────────────────────────────────────────
     private void OnTriggerEnter(Collider other)
     {
         if (!EstaAbierta) return;
+        if (other == null) return;
         if (!other.CompareTag("Survivor")) return;
-        if (yaEntraron.Contains(other.gameObject)) return;
+
+        GameObject go = other.gameObject;
+        if (yaEntraron.Contains(go)) return;
 
         SurvivorHealth health = other.GetComponent<SurvivorHealth>();
         if (health != null && !health.EstaVivo) return;
 
-        yaEntraron.Add(other.gameObject);
+        yaEntraron.Add(go);
         sobrevivientesCruzaron++;
-        Debug.Log($"[ExitDoor] {other.name} cruzó ({sobrevivientesCruzaron}/{sobrevivientesVivos})");
+
+        Debug.Log("[ExitDoor] " + other.name + " crossed (" + sobrevivientesCruzaron + "/" + sobrevivientesVivos + ")");
 
         VerificarCondicionVictoria();
     }
 
     private void VerificarCondicionVictoria()
     {
-        if (sobrevivientesCruzaron >= sobrevivientesVivos && sobrevivientesVivos > 0)
+        if (sobrevivientesVivos <= 0)
         {
-            Debug.Log("[ExitDoor] ¡Todos cruzaron! Cargando siguiente nivel...");
+            Debug.LogWarning("[ExitDoor] No alive survivors detected. Check SurvivorHealth and tags.");
+            return;
+        }
+
+        if (sobrevivientesCruzaron >= sobrevivientesVivos)
+        {
+            Debug.Log("[ExitDoor] All crossed! Loading next level...");
             StartCoroutine(CargarSiguienteNivel());
         }
     }
 
     private IEnumerator CargarSiguienteNivel()
     {
-        // Revivir muertos antes de cambiar de escena
+        // Revive dead before scene change (optional)
         foreach (var s in FindObjectsByType<SurvivorHealth>(FindObjectsSortMode.None))
-            if (!s.EstaVivo) s.Revivir();
+        {
+            if (s != null && !s.EstaVivo) s.Revivir();
+        }
 
         yield return new WaitForSeconds(esperaAntesDeCarga);
+
+        // Scene name must exist in Build Settings
         SceneManager.LoadScene(nombreSiguienteNivel);
     }
 
     private void OnDestroy()
     {
+        if (maquinas == null) return;
+
         foreach (var m in maquinas)
+        {
             if (m != null) m.OnReparada -= ManejarMaquinaReparada;
+        }
     }
 }
