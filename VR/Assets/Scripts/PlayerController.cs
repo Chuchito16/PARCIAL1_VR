@@ -40,11 +40,13 @@ public class PlayerController : MonoBehaviour
 
     // ── Ataque (cazador) ──────────────────────────────────────────────────────
     private HunterAttack hunterAttack;
+   
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
         hunterAttack = GetComponent<HunterAttack>();
+        
     }
 
     private void Start()
@@ -64,6 +66,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+
         if (!EstaVivo) return;
 
         grounded = controller.isGrounded;
@@ -160,18 +163,7 @@ public class PlayerController : MonoBehaviour
     public void OnCorrer(InputAction.CallbackContext ctx)
     { if (ctx.performed) corriendo = true; else if (ctx.canceled) corriendo = false; }
 
-    public void OnInteractuar(InputAction.CallbackContext ctx)
-    {
-        if (ctx.performed)
-        {
-            presionandoInteraccion = true;
-            if (CompareTag("Hunter")) hunterAttack?.Atacar();
-        }
-        else if (ctx.canceled)
-        {
-            presionandoInteraccion = false;
-        }
-    }
+   
 
     private void OnDrawGizmosSelected()
     {
