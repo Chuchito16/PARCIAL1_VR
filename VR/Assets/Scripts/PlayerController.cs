@@ -17,7 +17,6 @@ public class PlayerController : MonoBehaviour
     public float pitchMax = 80f;
 
     [Header("Interacción con Máquinas")]
-    [Tooltip("Radio para detectar máquinas cercanas")]
     public float radioDeteccionMaquina = 2f;
     public LayerMask layerMaquinas;
 
@@ -30,115 +29,85 @@ public class PlayerController : MonoBehaviour
     private Vector2 moveInput;
     private Vector2 lookInput;
     private bool corriendo;
-
-    // ── Mouse ─────────────────────────────────────────────────────────────────
     private bool usaMouse = false;
 
-    // ── Rol ───────────────────────────────────────────────────────────────────
+    // ── Estado ────────────────────────────────────────────────────────────────
     public bool EstaVivo { get; private set; } = true;
 
     // ── Máquina actual ────────────────────────────────────────────────────────
     private MachineRepair maquinaActual = null;
     private bool presionandoInteraccion = false;
 
-    // ── Awake ─────────────────────────────────────────────────────────────────
+    // ── Ataque (cazador) ──────────────────────────────────────────────────────
+    private HunterAttack hunterAttack;
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        hunterAttack = GetComponent<HunterAttack>();
     }
 
-    // ── Start ─────────────────────────────────────────────────────────────────
     private void Start()
     {
         PlayerInput pi = GetComponent<PlayerInput>();
         if (pi != null)
-        {
             foreach (var device in pi.devices)
-            {
-                if (device is Keyboard)
-                {
-                    SetUsaMouse(true);
-                    break;
-                }
-            }
-        }
+                if (device is Keyboard) { SetUsaMouse(true); break; }
     }
 
     public void SetUsaMouse(bool valor)
     {
         usaMouse = valor;
-        if (usaMouse)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        if (usaMouse) { Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false; }
         Debug.Log($"[PlayerController] {gameObject.name} → usaMouse = {valor}");
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
     private void Update()
     {
         if (!EstaVivo) return;
 
         grounded = controller.isGrounded;
-        if (grounded && playerVelocity.y < -2f)
-            playerVelocity.y = -2f;
+        if (grounded && playerVelocity.y < -2f) playerVelocity.y = -2f;
 
         if (usaMouse && Mouse.current != null)
-        {
-            Vector2 delta = Mouse.current.delta.ReadValue();
-            lookInput = delta;
-        }
+            lookInput = Mouse.current.delta.ReadValue();
 
         HandleMovimiento();
         HandleCamara();
-
         playerVelocity.y += gravedad * Time.deltaTime;
 
-        // Solo los sobrevivientes interactúan con máquinas
-        if (CompareTag("Survivor"))
-            HandleInteraccionMaquina();
+        if (CompareTag("Survivor")) HandleInteraccionMaquina();
     }
 
-    // ── Movimiento ────────────────────────────────────────────────────────────
     private void HandleMovimiento()
     {
         float speed = corriendo ? velocidadCorrer : velocidadCaminar;
-
         Vector3 forward = camTransform != null ? camTransform.forward : transform.forward;
         Vector3 right = camTransform != null ? camTransform.right : transform.right;
-        forward.y = 0f;
-        right.y = 0f;
-        forward.Normalize();
-        right.Normalize();
+        forward.y = 0f; right.y = 0f;
+        forward.Normalize(); right.Normalize();
 
         Vector3 moveDir = Vector3.ClampMagnitude(forward * moveInput.y + right * moveInput.x, 1f);
         controller.Move((moveDir * speed + Vector3.up * playerVelocity.y) * Time.deltaTime);
     }
 
-    // ── Cámara ────────────────────────────────────────────────────────────────
     private void HandleCamara()
     {
         transform.Rotate(Vector3.up * lookInput.x * sensibilidad);
-
         pitch -= lookInput.y * sensibilidad;
         pitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
-
         if (camTransform != null)
         {
-            Vector3 angles = camTransform.localEulerAngles;
-            angles.x = pitch;
-            camTransform.localEulerAngles = angles;
+            Vector3 a = camTransform.localEulerAngles;
+            a.x = pitch;
+            camTransform.localEulerAngles = a;
         }
     }
 
-    // ── Detección y uso de máquinas ───────────────────────────────────────────
     private void HandleInteraccionMaquina()
     {
-        // Detectar la máquina más cercana en rango
         Collider[] hits = Physics.OverlapSphere(transform.position, radioDeteccionMaquina, layerMaquinas);
-
-        MachineRepair maquinaMasCercana = null;
+        MachineRepair cercana = null;
         float distMin = float.MaxValue;
 
         foreach (var hit in hits)
@@ -146,86 +115,64 @@ public class PlayerController : MonoBehaviour
             MachineRepair maq = hit.GetComponent<MachineRepair>();
             if (maq != null && !maq.EstaReparada)
             {
-                float dist = Vector3.Distance(transform.position, hit.transform.position);
-                if (dist < distMin)
-                {
-                    distMin = dist;
-                    maquinaMasCercana = maq;
-                }
+                float d = Vector3.Distance(transform.position, hit.transform.position);
+                if (d < distMin) { distMin = d; cercana = maq; }
             }
         }
 
-        // Cambiar la máquina objetivo si cambió
-        if (maquinaMasCercana != maquinaActual)
+        if (cercana != maquinaActual)
         {
-            // Dejar de reparar la anterior
-            if (maquinaActual != null)
-                maquinaActual.SetInteractuando(false);
-
-            maquinaActual = maquinaMasCercana;
+            if (maquinaActual != null) maquinaActual.SetInteractuando(false);
+            maquinaActual = cercana;
         }
 
-        // Seguir reparando si mantiene la interacción
         if (maquinaActual != null)
             maquinaActual.SetInteractuando(presionandoInteraccion);
     }
 
-    // ── Muerte del jugador ────────────────────────────────────────────────────
     public void Morir()
     {
         if (!EstaVivo) return;
         EstaVivo = false;
-
-        // Soltar máquina si estaba reparando
-        if (maquinaActual != null)
-            maquinaActual.SetInteractuando(false);
-
-        Debug.Log($"[PlayerController] {gameObject.name} ha muerto.");
-        // Aquí puedes agregar: ragdoll, desactivar control, etc.
+        if (maquinaActual != null) maquinaActual.SetInteractuando(false);
         controller.enabled = false;
+        Debug.Log($"[PlayerController] {gameObject.name} ha muerto.");
     }
 
-    public void OnMove(InputAction.CallbackContext context)
-        => moveInput = context.ReadValue<Vector2>();
-
-    public void OnCamara(InputAction.CallbackContext context)
+    public void Revivir()
     {
-        if (!usaMouse)
-            lookInput = context.ReadValue<Vector2>();
+        EstaVivo = true;
+        controller.enabled = true;
+        playerVelocity = Vector3.zero;
+        Debug.Log($"[PlayerController] {gameObject.name} revivido.");
     }
 
-    public void OnJump(InputAction.CallbackContext context)
-    {
-        if (context.performed && grounded)
-            playerVelocity.y = Mathf.Sqrt(fuerzaSalto * -2f * gravedad);
-    }
+    // ── Eventos Input ─────────────────────────────────────────────────────────
+    public void OnMove(InputAction.CallbackContext ctx)
+        => moveInput = ctx.ReadValue<Vector2>();
 
-    public void OnCorrer(InputAction.CallbackContext context)
-    {
-        if (context.performed) corriendo = true;
-        else if (context.canceled) corriendo = false;
-    }
+    public void OnCamara(InputAction.CallbackContext ctx)
+    { if (!usaMouse) lookInput = ctx.ReadValue<Vector2>(); }
 
-    /// <summary>
-    /// Mantener presionado → repara máquina cercana (solo sobrevivientes)
-    /// </summary>
-    public void OnInteractuar(InputAction.CallbackContext context)
+    public void OnJump(InputAction.CallbackContext ctx)
+    { if (ctx.performed && grounded) playerVelocity.y = Mathf.Sqrt(fuerzaSalto * -2f * gravedad); }
+
+    public void OnCorrer(InputAction.CallbackContext ctx)
+    { if (ctx.performed) corriendo = true; else if (ctx.canceled) corriendo = false; }
+
+    public void OnInteractuar(InputAction.CallbackContext ctx)
     {
-        if (context.performed)
+        if (ctx.performed)
         {
             presionandoInteraccion = true;
-
-            // Cazador: lógica de ataque/captura aquí si se desea
-            if (CompareTag("Hunter"))
-                Debug.Log("[Hunter] ¡Atacando!");
+            if (CompareTag("Hunter")) hunterAttack?.Atacar();
         }
-        else if (context.canceled)
+        else if (ctx.canceled)
         {
             presionandoInteraccion = false;
         }
     }
 
-    // ── Gizmo de radio de interacción ─────────────────────────────────────────
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;
