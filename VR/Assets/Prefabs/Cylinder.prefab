@@ -253,6 +253,10 @@ MonoBehaviour:
   sensibilidad: 2
   pitchMin: -80
   pitchMax: 80
+  radioDeteccionMaquina: 2
+  layerMaquinas:
+    serializedVersion: 2
+    m_Bits: 8
 --- !u!1 &4909278082879369040
 GameObject:
   m_ObjectHideFlags: 0
