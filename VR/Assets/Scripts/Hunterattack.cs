@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -6,36 +7,33 @@ using UnityEngine;
 /// </summary>
 public class HunterAttack : MonoBehaviour
 {
-    [Header("Ataque")]
-    public float radioAtaque = 1.5f;
-    public float cooldown = 0.8f;
+    private bool cooldown = false;
+    private daño hit;
+    private CharacterController cc;    
 
-    private float tiempoUltimoAtaque = -99f;
-
-    // Llamado desde PlayerController.OnInteractuar cuando el tag es Hunter
-    public void Atacar()
+    private void Start()
     {
-        if (Time.time - tiempoUltimoAtaque < cooldown) return;
-        tiempoUltimoAtaque = Time.time;
+        hit = GetComponentInChildren<daño>();
+        cc = GetComponentInChildren<CharacterController>();
 
-        Collider[] hits = Physics.OverlapSphere(transform.position, radioAtaque);
-        foreach (var hit in hits)
-        {
-            if (hit.CompareTag("Survivor"))
-            {
-                SurvivorHealth health = hit.GetComponent<SurvivorHealth>();
-                if (health != null)
-                {
-                    health.RecibirGolpe();
-                    Debug.Log($"[HunterAttack] Golpeó a {hit.name}");
-                }
-            }
-        }
+    }
+    private void Update()
+    {
+        cooldown = hit.aplicarDaño;
+        StartCoroutine(Gothit());
     }
 
-    private void OnDrawGizmosSelected()
+        IEnumerator Gothit()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, radioAtaque);
+        
+        if (cooldown == false)
+        {
+
+            cc.enabled = false; 
+
+            yield return new WaitForSeconds(2f);
+
+            cc.enabled = true; 
+        }
     }
 }

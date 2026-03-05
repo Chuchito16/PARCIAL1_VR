@@ -13027,6 +13027,7 @@ GameObject:
   - component: {fileID: 1086107953}
   - component: {fileID: 1086107952}
   - component: {fileID: 1086107956}
+  - component: {fileID: 1086107957}
   m_Layer: 0
   m_Name: Salida
   m_TagString: Untagged
@@ -13155,6 +13156,18 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1086107957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1086107950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d50abcda66d69054a8327eb3a6a7707e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1 &1089987740 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5472688465006498844, guid: b99bae8a09326e64ca4e89ba8b29740b, type: 3}
@@ -18713,6 +18726,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameRoleManager
   playerPrefab: {fileID: 4225181861501087347, guid: 1d9510be746a7f64c91927a4c18d1728, type: 3}
+  HunterPrefab: {fileID: 4225181861501087347, guid: acdb90cbe9fabe448a2aa92655de57da, type: 3}
   nombresModelos:
   - Rojo
   - Azul
