@@ -29,6 +29,8 @@ public class ExitDoor : MonoBehaviour
     private int sobrevivientesVivos = 0;
     private int sobrevivientesCruzaron = 0;
 
+    private bool cargandoNivel = false;
+
     private readonly HashSet<GameObject> yaEntraron = new HashSet<GameObject>();
 
     private void Awake()
@@ -131,22 +133,35 @@ public class ExitDoor : MonoBehaviour
         yaEntraron.Add(go);
         sobrevivientesCruzaron++;
 
-        Debug.Log("[ExitDoor] " + other.name + " crossed (" + sobrevivientesCruzaron + "/" + sobrevivientesVivos + ")");
+        // Recalcular SIEMPRE antes de verificar
+        RecalcularSobrevivientesVivos();
+
+        Debug.Log($"[ExitDoor] {other.name} cruzó ({sobrevivientesCruzaron}/{sobrevivientesVivos})");
 
         VerificarCondicionVictoria();
     }
 
     private void VerificarCondicionVictoria()
     {
-        if (sobrevivientesVivos <= 0)
+        if (cargandoNivel) return;
+
+        RecalcularSobrevivientesVivos();
+
+        Debug.Log($"[ExitDoor] Verificando: cruzaron={sobrevivientesCruzaron}, vivos={sobrevivientesVivos}");
+
+        // Si no hay survivors vivos pero alguien cruzó, avanzar igual
+        if (sobrevivientesVivos <= 0 && sobrevivientesCruzaron > 0)
         {
-            Debug.LogWarning("[ExitDoor] No alive survivors detected. Check SurvivorHealth and tags.");
+            Debug.Log("[ExitDoor] Sin survivors vivos restantes, cargando nivel...");
+            cargandoNivel = true;
+            StartCoroutine(CargarSiguienteNivel());
             return;
         }
 
-        if (sobrevivientesCruzaron >= sobrevivientesVivos)
+        if (sobrevivientesVivos > 0 && sobrevivientesCruzaron >= sobrevivientesVivos)
         {
-            Debug.Log("[ExitDoor] All crossed! Loading next level...");
+            Debug.Log("[ExitDoor] ¡Todos cruzaron! Cargando siguiente nivel...");
+            cargandoNivel = true;
             StartCoroutine(CargarSiguienteNivel());
         }
     }
