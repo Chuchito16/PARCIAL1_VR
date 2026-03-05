@@ -9,6 +9,8 @@ public class GameRoleManager : MonoBehaviour
     [Header("Prefab único (con los 4 modelos hijos)")]
     public GameObject playerPrefab;
 
+    public GameObject HunterPrefab;
+
     [Header("Nombres de los modelos hijos en orden de entrada")]
     public string[] nombresModelos = new string[] { "Rojo", "Azul", "Verde", "Amarillo" };
 
@@ -39,9 +41,12 @@ public class GameRoleManager : MonoBehaviour
             Debug.LogError("[GameRoleManager] No se encontró PlayerInputManager.");
             return;
         }
-
+        if (HunterPrefab != null)
+        inputManager.playerPrefab = HunterPrefab;
+    else
         inputManager.playerPrefab = playerPrefab;
-    }
+}
+
 
     public void OnPlayerJoined(PlayerInput playerInput)
     {
@@ -54,7 +59,7 @@ public class GameRoleManager : MonoBehaviour
             return;
         }
 
-        // ── Spawn: desactivar CharacterController para poder teleportar ───────
+        // 1. Posicionamiento (Teleport)
         Transform spawn = ObtenerSpawnPoint(playerIndex);
         if (spawn != null)
         {
@@ -64,33 +69,39 @@ public class GameRoleManager : MonoBehaviour
             playerInput.transform.rotation = spawn.rotation;
             if (cc != null) cc.enabled = true;
         }
-        else
+
+        // 2. Lógica de Modelos (Solo necesaria para supervivientes si el HunterPrefab es único)
+        if (playerIndex != 0)
         {
-            Debug.LogWarning($"[GameRoleManager] No hay spawn point para el jugador {playerIndex + 1}.");
+            AsignarModelo(playerInput.gameObject, playerIndex);
         }
 
-        // ── Activar solo el modelo de este jugador ────────────────────────────
-        AsignarModelo(playerInput.gameObject, playerIndex);
-
-        // ── PlayerController ──────────────────────────────────────────────────
+        // 3. Registro de PlayerController
         PlayerController pc = playerInput.GetComponent<PlayerController>();
         if (pc == null)
         {
             Debug.LogError("[GameRoleManager] El prefab no tiene PlayerController.");
             return;
         }
-
         jugadores.Add(pc);
 
+        // 4. Configuración de Roles y CAMBIO DINÁMICO DE PREFAB
+        if (playerIndex == 0)
+        {
+            ConfigurarCazador(playerInput.gameObject);
+
+            // --- CAMBIO CLAVE AQUÍ ---
+            // Una vez que el Hunter entró, cambiamos el prefab del manager para los que vienen
+            inputManager.playerPrefab = playerPrefab;
+        }
+        else
+        {
+            ConfigurarSobreviviente(playerInput.gameObject);
+        }
+
+        // 5. Configuración de dispositivos
         foreach (var device in playerInput.devices)
             if (device is Keyboard) { pc.SetUsaMouse(true); break; }
-
-        if (playerIndex == 0) ConfigurarCazador(playerInput.gameObject);
-        else ConfigurarSobreviviente(playerInput.gameObject);
-
-        Debug.Log($"[GameRoleManager] Jugador {playerIndex + 1} → modelo '{nombresModelos[playerIndex]}' " +
-                  $"en spawn {spawn?.name ?? "NO ENCONTRADO"} " +
-                  $"como {(playerIndex == 0 ? "CAZADOR" : "SOBREVIVIENTE")}");
 
         if (jugadores.Count >= maxJugadores)
             inputManager.DisableJoining();
