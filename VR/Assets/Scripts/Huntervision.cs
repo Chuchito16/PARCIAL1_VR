@@ -1,122 +1,169 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Se adjunta automáticamente a la cámara del Cazador.
-/// Reduce el FOV y agrega un overlay oscuro con hueco central
-/// para simular "visión de túnel" / visión reducida.
-/// </summary>
 [RequireComponent(typeof(Camera))]
 public class HunterVision : MonoBehaviour
 {
-    [Header("Visión de Túnel")]
-    [Tooltip("FOV reducido del cazador (normal ~60)")]
-    public float fovReducido = 45f;
+    [Header("FOV")]
+    public float fovReducido = 65f;
 
-    [Tooltip("Qué tan oscuro es el borde (0 = transparente, 1 = negro total)")]
-    [Range(0f, 1f)]
-    public float intensidadVignette = 0.85f;
+    [Header("Niebla")]
+    [Range(0f, 0.3f)] public float radioVisible = 0.12f;
+    [Range(0.1f, 0.5f)] public float difusion = 0.30f;
+    [Range(0f, 0.6f)] public float neblinaCentro = 0.25f;
+    [Range(0f, 1f)] public float intensidadRuido = 0.35f;
 
-    [Tooltip("Radio del área visible en el centro (0.0 - 1.0)")]
-    [Range(0.1f, 0.9f)]
-    public float radioVisible = 0.35f;
+    [Header("Animación")]
+    public float velocidadPulso = 0.4f;
+    public float velocidadDesplaz = 0.08f;
+    [Range(0f, 0.04f)] public float amplitudPulso = 0.025f;
 
-    [Tooltip("Suavizado del borde de la vignette")]
-    [Range(0.01f, 0.5f)]
-    public float suavizado = 0.15f;
-
-    // ── Internos ──────────────────────────────────────────────────────────────
     private Camera cam;
     private Canvas canvas;
-    private RawImage vignetteImage;
-    private Texture2D vignetteTex;
+    private RawImage img;
+    private Texture2D tex;
+    private float offsetX, offsetY;
+
+    private const int RES = 256;
 
     private void Awake()
     {
         cam = GetComponent<Camera>();
         cam.fieldOfView = fovReducido;
-
-        CrearVignetteUI();
+        LimpiarAnteriores();
+        Construir();
     }
 
-    // ── Crear overlay de vignette via UI Canvas ───────────────────────────────
-    private void CrearVignetteUI()
+    private void Update()
     {
-        // Canvas en espacio de screen overlay, ligado a esta cámara
-        GameObject canvasGO = new GameObject("HunterVignette");
-        canvasGO.transform.SetParent(transform);
+        // Actualizar posición y tamaño del overlay para que coincida
+        // exactamente con el viewport de ESTA cámara en pantalla
+        ActualizarRectOverlay();
 
-        canvas = canvasGO.AddComponent<Canvas>();
+        offsetX += velocidadDesplaz * Time.deltaTime * 0.7f;
+        offsetY += velocidadDesplaz * Time.deltaTime * 0.4f;
+
+        float pulso = Mathf.Sin(Time.time * velocidadPulso * Mathf.PI * 2f);
+        GenerarTextura(radioVisible + pulso * amplitudPulso);
+        img.texture = tex;
+    }
+
+    // ── Ajustar el RectTransform al viewport de esta cámara ───────────────────
+    private void ActualizarRectOverlay()
+    {
+        Rect vp = cam.rect; // valores 0..1 del viewport en pantalla
+
+        float sw = Screen.width;
+        float sh = Screen.height;
+
+        // Convertir de viewport (0..1) a píxeles de pantalla
+        float px = vp.x * sw;
+        float py = vp.y * sh;
+        float pw = vp.width * sw;
+        float ph = vp.height * sh;
+
+        // El Canvas ScreenSpaceOverlay usa coordenadas de píxel directamente
+        RectTransform rt = img.rectTransform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.zero;
+        rt.pivot = Vector2.zero;
+        rt.anchoredPosition = new Vector2(px, py);
+        rt.sizeDelta = new Vector2(pw, ph);
+    }
+
+    private void Construir()
+    {
+        GameObject go = new GameObject("HunterFog");
+        // Hijo de la escena, NO de la cámara, para que no se duplique
+        go.transform.SetParent(null);
+
+        canvas = go.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 10;
+        canvas.sortingOrder = 99;
+        go.AddComponent<CanvasScaler>();
+        go.AddComponent<GraphicRaycaster>();
 
-        canvasGO.AddComponent<CanvasScaler>().uiScaleMode =
-            CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        canvasGO.AddComponent<GraphicRaycaster>();
+        GameObject imgGO = new GameObject("FogImg");
+        imgGO.transform.SetParent(go.transform, false);
 
-        // Imagen que cubre toda la pantalla
-        GameObject imgGO = new GameObject("VignetteImg");
-        imgGO.transform.SetParent(canvasGO.transform, false);
+        img = imgGO.AddComponent<RawImage>();
+        img.color = Color.white;
 
-        vignetteImage = imgGO.AddComponent<RawImage>();
-        RectTransform rect = vignetteImage.rectTransform;
-        rect.anchorMin = Vector2.zero;
-        rect.anchorMax = Vector2.one;
-        rect.offsetMin = Vector2.zero;
-        rect.offsetMax = Vector2.zero;
+        // Posición inicial
+        ActualizarRectOverlay();
 
-        GenerarTextura();
-        vignetteImage.texture = vignetteTex;
-        vignetteImage.color = new Color(1f, 1f, 1f, intensidadVignette);
+        GenerarTextura(radioVisible);
+        img.texture = tex;
     }
 
-    // ── Generar textura de vignette (radial gradient) ─────────────────────────
-    private void GenerarTextura()
+    private void GenerarTextura(float radio)
     {
-        int res = 256;
-        vignetteTex = new Texture2D(res, res, TextureFormat.RGBA32, false);
-        vignetteTex.wrapMode = TextureWrapMode.Clamp;
-        vignetteTex.filterMode = FilterMode.Bilinear;
+        if (tex != null) Destroy(tex);
 
-        Color[] pixels = new Color[res * res];
-        Vector2 center = new Vector2(0.5f, 0.5f);
+        tex = new Texture2D(RES, RES, TextureFormat.RGBA32, false);
+        tex.wrapMode = TextureWrapMode.Clamp;
+        tex.filterMode = FilterMode.Bilinear;
 
-        for (int y = 0; y < res; y++)
+        Color[] pixels = new Color[RES * RES];
+        float noiseScale = 3.5f;
+
+        for (int y = 0; y < RES; y++)
         {
-            for (int x = 0; x < res; x++)
+            for (int x = 0; x < RES; x++)
             {
-                Vector2 uv = new Vector2((float)x / (res - 1), (float)y / (res - 1));
-                float dist = Vector2.Distance(uv, center);
+                float uvx = (float)x / (RES - 1) - 0.5f;
+                float uvy = (float)y / (RES - 1) - 0.5f;
+                float dist = Mathf.Sqrt(uvx * uvx + uvy * uvy) * 2f;
 
-                // Fuera del radio → negro; dentro → transparente
-                float alpha = Mathf.InverseLerp(radioVisible, radioVisible + suavizado, dist);
-                pixels[y * res + x] = new Color(0f, 0f, 0f, alpha);
+                float gradiente = Mathf.InverseLerp(radio, radio + difusion, dist);
+                float alphaBase = Mathf.Lerp(neblinaCentro, 1f, gradiente);
+
+                float nx = (float)x / RES * noiseScale + offsetX;
+                float ny = (float)y / RES * noiseScale + offsetY;
+                float ruido = Mathf.PerlinNoise(nx, ny);
+                float peso = Mathf.Sin(gradiente * Mathf.PI) * intensidadRuido;
+                float alpha = Mathf.Clamp01(alphaBase + (ruido - 0.5f) * peso);
+
+                float nx2 = (float)x / RES * noiseScale * 2.3f - offsetY * 0.6f;
+                float ny2 = (float)y / RES * noiseScale * 2.3f + offsetX * 0.6f;
+                float ruido2 = Mathf.PerlinNoise(nx2, ny2);
+                float peso2 = Mathf.Sin(gradiente * Mathf.PI * 0.8f) * intensidadRuido * 0.4f;
+                alpha = Mathf.Clamp01(alpha + (ruido2 - 0.5f) * peso2);
+
+                pixels[y * RES + x] = new Color(0f, 0f, 0f, alpha);
             }
         }
 
-        vignetteTex.SetPixels(pixels);
-        vignetteTex.Apply();
+        tex.SetPixels(pixels);
+        tex.Apply();
     }
 
-    // ── Permite ajustar en runtime ────────────────────────────────────────────
-    public void SetIntensidad(float valor)
+    private void LimpiarAnteriores()
     {
-        intensidadVignette = Mathf.Clamp01(valor);
-        if (vignetteImage != null)
-            vignetteImage.color = new Color(1f, 1f, 1f, intensidadVignette);
-    }
+        foreach (var c in GetComponentsInChildren<Canvas>())
+            Destroy(c.gameObject);
 
-    public void SetRadioVisible(float radio)
-    {
-        radioVisible = Mathf.Clamp(radio, 0.1f, 0.9f);
-        GenerarTextura();
-        if (vignetteImage != null)
-            vignetteImage.texture = vignetteTex;
+        // Buscar canvas huérfanos de versiones anteriores por nombre
+        foreach (string n in new[]{ "HunterFog", "HunterVignette",
+                                     "HunterDarknessOverlay" })
+        {
+            GameObject viejo = GameObject.Find(n);
+            if (viejo != null) Destroy(viejo);
+        }
+
+        if (transform.parent != null)
+        {
+            foreach (string n in new[] { "HunterProximityLight" })
+            {
+                Transform t = transform.parent.Find(n);
+                if (t != null) Destroy(t.gameObject);
+            }
+        }
     }
 
     private void OnDestroy()
     {
-        if (vignetteTex != null) Destroy(vignetteTex);
+        if (tex != null) Destroy(tex);
         if (canvas != null) Destroy(canvas.gameObject);
     }
 }
