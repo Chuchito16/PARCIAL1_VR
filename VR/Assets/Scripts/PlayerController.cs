@@ -40,13 +40,11 @@ public class PlayerController : MonoBehaviour
 
     // ── Ataque (cazador) ──────────────────────────────────────────────────────
     private HunterAttack hunterAttack;
-   
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
         hunterAttack = GetComponent<HunterAttack>();
-        
     }
 
     private void Start()
@@ -66,7 +64,6 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-
         if (!EstaVivo) return;
 
         grounded = controller.isGrounded;
@@ -167,6 +164,7 @@ public class PlayerController : MonoBehaviour
     {
         if (ctx.performed)
         {
+            presionandoInteraccion = true;
             
         }
         else if (ctx.canceled)
