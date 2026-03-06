@@ -4165,7 +4165,7 @@ MonoBehaviour:
   - {fileID: 1091745217}
   puertaVisual: {fileID: 558337150}
   luzPuerta: {fileID: 1483429576}
-  nombreSiguienteNivel: Level02
+  nombreSiguienteNivel: VICTORIA
   esperaAntesDeCarga: 2
   promptEntrada: {fileID: 1654587196}
 --- !u!4 &494951461
