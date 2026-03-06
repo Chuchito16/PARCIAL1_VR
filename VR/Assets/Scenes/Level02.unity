@@ -4791,6 +4791,7 @@ GameObject:
   - component: {fileID: 558337153}
   - component: {fileID: 558337152}
   - component: {fileID: 558337151}
+  - component: {fileID: 558337157}
   m_Layer: 0
   m_Name: Salida
   m_TagString: Untagged
@@ -4931,6 +4932,28 @@ Transform:
   - {fileID: 1654587197}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &558337157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 558337150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a9ee1a42729b914e8aa7bb0d36e3e3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExitDoor
+  maquinas:
+  - {fileID: 1091745217}
+  - {fileID: 1151812260}
+  - {fileID: 2066296681}
+  - {fileID: 755460700}
+  puertaVisual: {fileID: 558337150}
+  luzPuerta: {fileID: 1483429576}
+  nombreSiguienteNivel: VICTORIA
+  esperaAntesDeCarga: 2
+  promptEntrada: {fileID: 1654587196}
 --- !u!64 &559947548
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6089,6 +6112,17 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 8679444522200588584, guid: b99bae8a09326e64ca4e89ba8b29740b, type: 3}
+--- !u!114 &755460700 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7597934913795145292, guid: 73c4061a8ab914b438beb1f5624b817c, type: 3}
+  m_PrefabInstance: {fileID: 2048711796}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5225a2c055d88e45951bfc95fcb67dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MachineRepair
 --- !u!64 &757132167
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -9646,6 +9680,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8752144455400833093, guid: 73c4061a8ab914b438beb1f5624b817c, type: 3}
   m_PrefabInstance: {fileID: 1930795473}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1151812260 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7597934913795145292, guid: 73c4061a8ab914b438beb1f5624b817c, type: 3}
+  m_PrefabInstance: {fileID: 1930795473}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5225a2c055d88e45951bfc95fcb67dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MachineRepair
 --- !u!64 &1152274023
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -23179,6 +23224,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8752144455400833093, guid: 73c4061a8ab914b438beb1f5624b817c, type: 3}
   m_PrefabInstance: {fileID: 899542120}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2066296681 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7597934913795145292, guid: 73c4061a8ab914b438beb1f5624b817c, type: 3}
+  m_PrefabInstance: {fileID: 899542120}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5225a2c055d88e45951bfc95fcb67dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MachineRepair
 --- !u!64 &2070685378
 MeshCollider:
   m_ObjectHideFlags: 0

@@ -5,9 +5,6 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/VICTORIA.unity
-    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
     path: Assets/Scenes/MenuPrincipal.unity
     guid: 8cc683ec8f1336247a7a4493dc81ea97
@@ -17,6 +14,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Level02.unity
     guid: cdae27b47ce76bb45a5ebe8a5002fd21
+  - enabled: 1
+    path: Assets/Scenes/VICTORIA.unity
+    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 0
     path: Assets/Scenes/41.unity
     guid: 08a09b9d260405440afa438c500d9577
